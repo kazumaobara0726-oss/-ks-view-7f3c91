@@ -1,30 +1,92 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#ffffff">
-<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
-<meta name="googlebot" content="noindex,nofollow,noarchive,nosnippet">
-<title>規律スコア</title>
-<style>
-:root{--ink:#111827;--muted:#667085;--line:#d8e0ea;--soft:#f4f6f9;--blue:#2458d6;--blue-soft:#edf3ff;--green:#08775a;--green-soft:#e8f5f0;--red:#b64c4c;--gold:#8a6500}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f0f3f7;color:var(--ink);font-family:Arial,"Noto Sans JP",sans-serif;font-variant-numeric:tabular-nums}button,input{font:inherit}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line)}.top-inner{max-width:1080px;margin:auto;padding:12px 16px}.brand-row{display:flex;align-items:center;gap:10px}.mark{width:38px;height:38px;display:grid;place-items:center;border-radius:5px;background:var(--ink);color:#fff;font-weight:800}.brand{font-size:21px;font-weight:800}.updated{margin-left:auto;color:var(--muted);font-size:10px}.share{height:36px;margin-left:8px;padding:0 12px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--blue);font-weight:700}.search{width:100%;height:42px;margin-top:10px;padding:0 12px;border:1px solid #c7d1df;border-radius:5px;background:#fff}.tabs{display:flex;gap:6px;margin-top:10px;overflow-x:auto}.tabs button{flex:0 0 auto;height:34px;padding:0 11px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--muted);font-size:11px;font-weight:700}.tabs button.active{border-color:var(--blue);background:var(--blue);color:#fff}.wrap{max-width:1080px;margin:auto;padding:14px}.notice{margin-bottom:12px;padding:12px 14px;border-left:4px solid var(--blue);background:#fff;color:var(--muted);font-size:11px;line-height:1.6}.leader{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:15px 16px;border-radius:6px;background:var(--ink);color:#fff}.leader small{display:block;color:#cbd5e1}.leader strong{font-size:20px}.leader b{margin-left:auto;font-size:34px}.grid{display:grid;grid-template-columns:minmax(270px,390px) minmax(0,1fr);gap:14px;align-items:start}.panel{overflow:hidden;border:1px solid var(--line);border-radius:6px;background:#fff}.panel-title{display:flex;justify-content:space-between;align-items:center;margin:0;padding:14px 15px;border-bottom:1px solid var(--line);font-size:15px}.panel-title span{color:var(--muted);font-size:10px}.rows{max-height:760px;overflow:auto}.row{display:grid;grid-template-columns:78px minmax(0,1fr) 45px;gap:8px;align-items:center;width:100%;min-height:55px;padding:8px 12px;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left}.row.selected{background:var(--blue-soft);box-shadow:inset 3px 0 var(--blue)}.row-symbol{font-size:13px;font-weight:800;overflow-wrap:anywhere}.row-name{min-width:0;color:var(--muted);font-size:10px;line-height:1.35;overflow-wrap:anywhere}.row-score{text-align:right;font-size:17px;font-weight:800}.high{color:var(--green)}.watch{color:var(--blue)}.random{color:var(--red)}.pending{color:var(--gold);font-size:10px}.detail{min-height:460px}.detail-head{display:flex;gap:14px;align-items:flex-start;padding:16px;border-bottom:1px solid var(--line)}.identity h1{margin:0;font-size:25px}.identity p{margin:4px 0 0;color:var(--muted);font-size:11px}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px;color:var(--muted);font-size:9px}.quote{margin-left:auto;text-align:right;white-space:nowrap}.quote strong{font-size:23px}.quote small{margin-left:4px;color:var(--muted)}.quote span{display:block;margin-top:4px;font-weight:700}.score-area{display:grid;grid-template-columns:150px 1fr;border-bottom:1px solid var(--line)}.total{display:grid;place-content:center;padding:17px;text-align:center;border-right:1px solid var(--line)}.total small{color:var(--muted)}.total strong{font-size:48px;color:var(--green)}.total em{font-style:normal;font-weight:700}.tf-list{padding:13px 16px}.tf{display:grid;grid-template-columns:52px 36px 1fr;gap:8px;align-items:center;margin:9px 0;font-size:10px}.bar{height:6px;border-radius:3px;background:#e4e9f0;overflow:hidden}.bar b{display:block;height:100%;background:var(--green)}.chart-tabs{display:flex;padding:0 16px;border-bottom:1px solid var(--line)}.chart-tabs button{height:42px;padding:0 14px;border:0;border-bottom:2px solid transparent;background:#fff;color:var(--muted);font-size:11px;font-weight:700}.chart-tabs button.active{border-color:var(--blue);color:var(--blue)}.chart{padding:14px 16px}.chart svg{display:block;width:100%;height:190px}.chart-grid{stroke:#e8edf3}.chart-line{fill:none;stroke:var(--blue);stroke-width:2.2;vector-effect:non-scaling-stroke}.chart-dot{fill:var(--blue)}.chart-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:9px}.dimensions{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line)}.dim{padding:11px 7px;text-align:center;border-right:1px solid var(--line);font-size:9px}.dim:last-child{border:0}.dim strong{display:block;margin-top:4px;font-size:15px}.pending-box{padding:18px;background:#fffaf0}.pending-box strong{color:var(--gold);font-size:21px}.pending-box p{color:var(--muted);font-size:11px;line-height:1.6}.foot{padding:14px;color:var(--muted);font-size:9px;text-align:center}@media(max-width:760px){.updated{display:none}.top-inner{padding:10px}.wrap{padding:10px}.grid{grid-template-columns:1fr}.rows{display:flex;max-height:none;overflow-x:auto}.row{flex:0 0 255px;grid-template-columns:72px minmax(0,1fr) 38px}.detail-head{padding:14px}.identity h1{font-size:22px}.quote strong{font-size:19px}.score-area{grid-template-columns:125px 1fr}.total strong{font-size:42px}.dimensions{grid-template-columns:repeat(3,1fr)}.dim:nth-child(3){border-right:0}.dim:nth-child(n+4){border-top:1px solid var(--line)}.chart svg{height:160px}}@media(max-width:430px){.brand{font-size:19px}.share{padding:0 9px}.score-area{display:block}.total{border-right:0;border-bottom:1px solid var(--line)}.dimensions{grid-template-columns:1fr 1fr}.dim:nth-child(3){border-right:1px solid var(--line)}.dim:nth-child(even){border-right:0}.dim:nth-child(n+3){border-top:1px solid var(--line)}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
+  <meta name="googlebot" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
+  <meta name="bingbot" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
+  <meta name="referrer" content="no-referrer">
+  <title>規律可能性スコア</title>
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-<header class="top"><div class="top-inner"><div class="brand-row"><span class="mark">K</span><span class="brand">規律スコア</span><span class="updated" id="updated"></span><button class="share" id="share">共有</button></div><input class="search" id="search" placeholder="ティッカー・会社名を検索" aria-label="銘柄検索"><nav class="tabs" id="tabs"></nav></div></header>
-<main class="wrap"><div class="notice">日足35%・週足40%・月足25%。上昇トレンドの継続が長いほど加点します。分析・学習補助用で、売買推奨ではありません。</div><section class="leader" id="leader"></section><div class="grid"><section class="panel"><h2 class="panel-title"><span id="list-title">ランキング</span><span id="count"></span></h2><div class="rows" id="rows"></div></section><section class="panel detail" id="detail"></section></div></main>
-<footer class="foot">データ: Nasdaq / Yahoo Finance。現在値と最新完成足の日付を分離しています。</footer>
-<script>
-const TF={daily:'日足',weekly:'週足',monthly:'月足'};const DIM={leadership:'先行性',trend:'トレンド',pullback:'押し目耐性',volume:'出来高',synchronization:'指数同期'};const MODES=[['sector','11セクター'],['market','主要市場'],['theme','テーマ'],['m7','M7'],['requested','指定銘柄'],['stock','全個別株']];let DATA,mode='sector',selected=null,timeframe='daily',query='';const $=s=>document.querySelector(s);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const tone=s=>s>=75?'high':s>=58?'watch':'random';const price=n=>Number(n).toLocaleString('en-US',{minimumFractionDigits:n>=100000?0:n>=1000?1:2,maximumFractionDigits:n>=100000?0:n>=1000?1:2});
-function all(){return [...DATA.results,...DATA.pending]};function list(){let a;if(query)a=all().filter(x=>(x.symbol+' '+x.name).toUpperCase().includes(query));else if(mode==='m7')a=DATA.results.filter(x=>x.tags?.includes('magnificent7'));else if(mode==='requested')a=all().filter(x=>x.requested);else a=all().filter(x=>x.category===mode);return a.sort((a,b)=>(b.score??-1)-(a.score??-1))}
-function tabs(){const root=$('#tabs');root.innerHTML=MODES.map(([id,name])=>'<button data-mode="'+id+'" class="'+(id===mode?'active':'')+'">'+name+'</button>').join('');root.querySelectorAll('button').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;query='';$('#search').value='';selected=null;render()})}
-function rows(){const items=list();if(!selected||!items.some(x=>x.id===selected))selected=items[0]?.id;$('#count').textContent=items.length+'件';$('#list-title').textContent=query?'検索結果':MODES.find(x=>x[0]===mode)?.[1]||'ランキング';$('#rows').innerHTML=items.map(x=>'<button class="row '+(x.id===selected?'selected':'')+'" data-id="'+esc(x.id)+'"><span class="row-symbol">'+esc(x.symbol)+'</span><span class="row-name">'+esc(x.name)+'</span><span class="row-score '+(x.pending?'pending':tone(x.score))+'">'+(x.pending?'保留':x.score)+'</span></button>').join('')||'<div class="pending-box">一致する銘柄がありません。</div>';$('#rows').querySelectorAll('.row').forEach(b=>b.onclick=()=>{selected=b.dataset.id;timeframe='daily';renderRowsAndDetail()})}
-function chart(tf){const points=tf?.chart?.values||[];if(!points.length)return'<p>チャートデータがありません。</p>';const coords=points.map((v,i)=>[(i/(Math.max(1,points.length-1))*100).toFixed(2),(96-v*.88).toFixed(2)]);const line=coords.map(p=>p.join(',')).join(' ');const dot=coords.at(-1);return'<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="価格推移"><line class="chart-grid" x1="0" y1="25" x2="100" y2="25"/><line class="chart-grid" x1="0" y1="50" x2="100" y2="50"/><line class="chart-grid" x1="0" y1="75" x2="100" y2="75"/><polyline class="chart-line" points="'+line+'"/>'+(points.length===1?'<circle class="chart-dot" cx="'+dot[0]+'" cy="'+dot[1]+'" r="2"/>':'')+'</svg><div class="chart-meta"><span>'+esc(tf.chart.from||'')+'</span><span>'+esc(tf.chart.to||'')+'</span></div>'}
-function detail(){const x=all().find(v=>v.id===selected);if(!x){$('#detail').innerHTML='<div class="pending-box">銘柄を選択してください。</div>';return}const change=x.changePercent??0;const head='<div class="detail-head"><div class="identity"><h1>'+esc(x.symbol)+'</h1><p>'+esc(x.name)+'</p><div class="meta"><span>'+esc(x.exchange)+'</span><span>'+esc(x.source)+'</span><span>最新日足 '+esc(x.candleAsOf)+'</span>'+(x.benchmark?'<span>比較 '+esc(x.benchmark)+'</span>':'')+'</div></div><div class="quote"><strong>'+price(x.price)+'</strong><small>'+esc(x.unit)+'</small><span class="'+(change>=0?'high':'random')+'">'+(change>=0?'+':'')+Number(change).toFixed(2)+'%</span></div></div>';if(x.pending){const tf=x.timeframes.daily;$('#detail').innerHTML=head+'<div class="pending-box"><strong>採点保留</strong><p>'+esc(x.reason)+'</p></div><div class="chart">'+chart(tf)+'</div>';return}const tfs=Object.keys(TF);if(!x.timeframes[timeframe])timeframe='daily';const tf=x.timeframes[timeframe];$('#detail').innerHTML=head+'<div class="score-area"><div class="total"><small>規律可能性</small><strong>'+x.score+'</strong><em class="'+tone(x.score)+'">'+esc(x.status)+'</em></div><div class="tf-list">'+tfs.map(k=>'<div class="tf"><span>'+TF[k]+'</span><strong>'+x.timeframes[k].score+'</strong><span class="bar"><b style="width:'+x.timeframes[k].score+'%"></b></span></div>').join('')+'</div></div><div class="chart-tabs">'+tfs.map(k=>'<button data-tf="'+k+'" class="'+(k===timeframe?'active':'')+'">'+TF[k]+'</button>').join('')+'</div><div class="chart">'+chart(tf)+'<div class="meta"><span>上昇継続 '+tf.duration+tf.durationUnit+'</span><span>時間軸スコア '+tf.score+'</span></div></div><div class="dimensions">'+Object.entries(DIM).map(([k,n])=>'<div class="dim">'+n+'<strong>'+(x.dimensions[k]??'対象外')+'</strong></div>').join('')+'</div>';$('#detail').querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{timeframe=b.dataset.tf;detail()})}
-function leader(){const x=DATA.results.filter(v=>v.category==='sector').sort((a,b)=>b.score-a.score)[0];$('#leader').innerHTML=x?'<div><small>米国11セクター首位</small><strong>'+esc(x.name)+' <span>'+esc(x.symbol)+'</span></strong></div><b>'+x.score+'</b>':''}
-function renderRowsAndDetail(){rows();detail()}function render(){tabs();renderRowsAndDetail()}async function share(){const url=new URL(location.href);url.hash='';try{if(navigator.share)await navigator.share({title:'規律スコア',url:url.href});else{await navigator.clipboard.writeText(url.href);$('#share').textContent='コピー済み';}}catch{}}
-fetch('./data.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{DATA=d;$('#updated').textContent='更新 '+new Date(d.collectedAt).toLocaleString('ja-JP');leader();render()}).catch(()=>{$('#detail').innerHTML='<div class="pending-box">データを読み込めませんでした。しばらくして再読み込みしてください。</div>'});$('#search').oninput=e=>{query=e.target.value.trim().toUpperCase();selected=null;renderRowsAndDetail()};$('#share').onclick=share;
-</script>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-row">
+        <span class="brand-mark" aria-hidden="true">K</span>
+        <div>
+          <strong class="brand-name">規律可能性スコア</strong>
+          <span class="brand-sub">日足・週足・月足構造を110点で評価</span>
+        </div>
+        <div class="header-actions">
+          <button class="plain-button" id="method-button" type="button">採点方法</button>
+          <button class="share-button" id="share-button" type="button">LINEで共有</button>
+        </div>
+      </div>
+      <div class="search-wrap">
+        <label class="search-box">
+          <span aria-hidden="true">⌕</span>
+          <input id="search-input" type="search" autocomplete="off" placeholder="200銘柄からティッカー・会社名を検索" aria-label="個別株検索">
+        </label>
+        <div class="search-results" id="search-results" hidden></div>
+      </div>
+      <nav class="tabs" aria-label="表示分類">
+        <button class="tab active" type="button" data-mode="stocks">個別株 TOP20</button>
+        <button class="tab" type="button" data-mode="indices">指数</button>
+        <button class="tab" type="button" data-mode="sectors">セクター</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-strip" aria-live="polite">
+      <div><span>更新</span><strong id="updated-at">読み込み中</strong></div>
+      <div><span>個別株母集団</span><strong id="universe-count">200銘柄</strong></div>
+      <div><span>データ基準</span><strong>最新完成足</strong></div>
+    </section>
+
+    <p class="notice">確定版110点方式による機械的なチャート評価です。月足は採点に使用しますが、画面には日足・週足だけを表示します。分析・学習補助用であり、売買推奨ではありません。</p>
+
+    <div class="workspace">
+      <section class="list-panel panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow" id="list-eyebrow">RANKING</p>
+            <h1 id="list-title">規律可能性 上位20銘柄</h1>
+          </div>
+          <span class="count-pill" id="list-count">—</span>
+        </div>
+        <div class="ranking-list" id="ranking-list"></div>
+      </section>
+
+      <section class="detail-panel panel" id="detail-panel" aria-live="polite">
+        <div class="loading-state">データを読み込んでいます…</div>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="method-dialog" class="method-dialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-head">
+        <div><p class="eyebrow">CONFIRMED METHOD</p><h2>採点方法</h2></div>
+        <button class="dialog-close" value="close" aria-label="閉じる">×</button>
+      </div>
+      <div class="method-grid">
+        <section><h3>全体構造</h3><p>日足100点×50％＋週足100点×50％＋月足構造ボーナス最大10点。減点後、該当する最も低い上限を適用します。</p></section>
+        <section><h3>日足・週足の100点</h3><ul><li>トレンド構造 18</li><li>出来高の質 25</li><li>押し目の質 17</li><li>下方向ボラ・下落速度 15</li><li>セクター対市場 10</li><li>個別株対セクター 15</li></ul></section>
+        <section><h3>区別する状態</h3><p>健全な押し目、単発急落、短期ランダム、規律崩れ、バブル的急騰を別々に判定します。同一の急落を二重に満額減点しません。</p></section>
+        <section><h3>バブル表示</h3><p>4条件中3つ以上で「高規律・ハイリスク／警告：バブル的急騰」。急騰だけでは原則上限を付けず、その後の大陰線で79→69→59→49の上限を適用します。</p></section>
+      </div>
+      <p class="method-note">各銘柄の詳細画面で、日足・週足の6項目、月足ボーナス、減点、規律崩れ点、適用上限を確認できます。</p>
+    </form>
+  </dialog>
+
+  <footer>
+    <span>データ: Yahoo Financeの完成日足</span>
+    <span>検索除外: noindex / robots.txt</span>
+  </footer>
+  <script src="./app.js" defer></script>
 </body>
 </html>

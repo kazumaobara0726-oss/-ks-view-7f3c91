@@ -1,0 +1,51 @@
+{
+  "stocks": [
+    "MU", "NVDA", "META", "SNDK", "SKHYV", "TSLA", "AMD", "AAPL", "MSFT", "AMZN",
+    "INTC", "SPCX", "GOOGL", "AVGO", "ORCL", "TSM", "GOOG", "PLTR", "AMAT", "STX",
+    "BE", "MRVL", "NFLX", "CSCO", "HOOD", "LITE", "WDC", "CRCL", "NBIS", "LRCX",
+    "LLY", "DELL", "ASML", "JPM", "COST", "GEV", "CAT", "PG", "BABA", "APP",
+    "CRWD", "SOFI", "NU", "KLAC", "JNJ", "V", "UNH", "MSTR", "PANW", "C",
+    "ABBV", "WMT", "AAL", "CRM", "BRK.B", "XOM", "DDOG", "QCOM", "BAC", "COHR",
+    "TXN", "IREN", "PEP", "WFC", "NOW", "RKLB", "GS", "VZ", "CRWV", "CBRS",
+    "SNOW", "IBM", "T", "CVX", "ACN", "ANET", "MRK", "CRDO", "NKE", "DIS",
+    "GLW", "COIN", "LIN", "NEE", "AXP", "CVS", "VRT", "HPE", "DAL", "APH",
+    "HD", "PATH", "ADI", "SE", "SYK", "ARM", "ALAB", "KO", "BA", "TMUS",
+    "MA", "GE", "MCD", "MS", "AAOI", "PM", "MPWR", "GILD", "ALNY", "DHR",
+    "COP", "ISRG", "MELI", "TD", "RDDT", "UBER", "PNC", "FCX", "RIVN", "ADBE",
+    "SMCI", "BKNG", "INTU", "HUM", "VRTX", "WULF", "SHOP", "IONS", "HCA", "CAH",
+    "PFE", "F", "ABT", "TMO", "FIX", "BMY", "MRNA", "KR", "TJX", "IONQ",
+    "NOK", "NET", "AZN", "GMM", "AZO", "BLK", "CRNX", "MDT", "CMCSA", "CB",
+    "AMGN", "MCHP", "CIEN", "HON", "SCHW", "WELL", "MARA", "ON", "ETN", "SPGI",
+    "NTAP", "TER", "QXO", "PWR", "FTNT", "BBIO", "RTX", "SN", "TTWO", "EXE",
+    "MPC", "VLO", "ASTS", "UNP", "BSX", "ZS", "EQT", "SPG", "MO", "NXPI",
+    "FDX", "DASH", "ROST", "CEG", "ODFL", "UAL", "PSX", "SBUX", "STM", "ONDS",
+    "PYPL", "PENG", "MDB", "COF", "VST", "CME", "OKTA", "DE", "LOW", "FRMI"
+  ],
+  "indices": [
+    {"id": "sp500", "symbol": "^GSPC", "name": "S&P 500", "benchmark": "ACWI", "volumeProxy": "SPY"},
+    {"id": "nasdaq", "symbol": "^IXIC", "name": "NASDAQ総合", "benchmark": "SPY", "volumeProxy": "QQQ"},
+    {"id": "gold", "symbol": "GC=F", "name": "金先物", "benchmark": "SPY"},
+    {"id": "nikkei", "symbol": "^N225", "name": "日経平均", "benchmark": "ACWI", "volumeProxy": "EWJ"},
+    {"id": "kospi", "symbol": "^KS11", "name": "KOSPI", "benchmark": "ACWI", "volumeProxy": "EWY"},
+    {"id": "sox-index", "symbol": "^SOX", "name": "SOX（半導体指数）", "benchmark": "QQQ", "volumeProxy": "SMH"},
+    {"id": "bitcoin", "symbol": "BTC-USD", "name": "ビットコイン", "benchmark": "SPY"}
+  ],
+  "sectors": [
+    {"id": "technology", "symbol": "XLK", "name": "情報技術"},
+    {"id": "communication", "symbol": "XLC", "name": "コミュニケーション・サービス"},
+    {"id": "consumer-discretionary", "symbol": "XLY", "name": "一般消費財"},
+    {"id": "financials", "symbol": "XLF", "name": "金融"},
+    {"id": "industrials", "symbol": "XLI", "name": "資本財・産業"},
+    {"id": "energy", "symbol": "XLE", "name": "エネルギー"},
+    {"id": "healthcare", "symbol": "XLV", "name": "ヘルスケア"},
+    {"id": "utilities", "symbol": "XLU", "name": "公益事業"},
+    {"id": "consumer-staples", "symbol": "XLP", "name": "生活必需品"},
+    {"id": "materials", "symbol": "XLB", "name": "素材"},
+    {"id": "real-estate", "symbol": "XLRE", "name": "不動産"},
+    {"id": "semiconductors", "symbol": "^SOX", "name": "半導体", "volumeProxy": "SMH"},
+    {"id": "space", "symbol": "UFO", "name": "宇宙"},
+    {"id": "biotechnology", "symbol": "XBI", "name": "バイオテクノロジー"},
+    {"id": "metals-mining", "symbol": "XME", "name": "金属・鉱業"}
+  ],
+  "supportSymbols": ["SPY", "QQQ", "ACWI", "SMH", "EWJ", "EWY"]
+}

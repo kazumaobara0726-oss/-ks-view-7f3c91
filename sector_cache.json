@@ -1,0 +1,1402 @@
+{
+  "NVDA": {
+    "name": "NVIDIA Corporation",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "META": {
+    "name": "Meta Platforms, Inc.",
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "SKHYV": {
+    "name": "SK hynix Inc.",
+    "sector": "",
+    "industry": "",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "TSLA": {
+    "name": "Tesla, Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Manufacturers",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "SNDK": {
+    "name": "Sandisk Corporation",
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "MU": {
+    "name": "Micron Technology, Inc.",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "AAPL": {
+    "name": "Apple Inc.",
+    "sector": "Technology",
+    "industry": "Consumer Electronics",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "AMZN": {
+    "name": "Amazon.com, Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "AMD": {
+    "name": "Advanced Micro Devices, Inc.",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "SPCX": {
+    "name": "Space Exploration Technologies Corp.",
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "MSFT": {
+    "name": "Microsoft Corporation",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "INTC": {
+    "name": "Intel Corporation",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "ORCL": {
+    "name": "Oracle Corporation",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "TSM": {
+    "name": "Taiwan Semiconductor Manufacturing Company Limited",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "GOOG": {
+    "name": "Alphabet Inc.",
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "AVGO": {
+    "name": "Broadcom Inc.",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "PLTR": {
+    "name": "Palantir Technologies Inc.",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "GOOGL": {
+    "name": "Alphabet Inc.",
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "BE": {
+    "name": "Bloom Energy Corporation",
+    "sector": "Industrials",
+    "industry": "Electrical Equipment & Parts",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CSCO": {
+    "name": "Cisco Systems, Inc.",
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "MRVL": {
+    "name": "Marvell Technology, Inc.",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "NFLX": {
+    "name": "Netflix, Inc.",
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "AMAT": {
+    "name": "Applied Materials, Inc.",
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "STX": {
+    "name": "Seagate Technology Holdings plc",
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "LRCX": {
+    "name": "Lam Research Corporation",
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "LITE": {
+    "name": "Lumentum Holdings Inc.",
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "HOOD": {
+    "name": "Robinhood Markets, Inc.",
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "NBIS": {
+    "name": "Nebius Group N.V.",
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "WDC": {
+    "name": "Western Digital Corporation",
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "CRCL": {
+    "name": "Circle Internet Group",
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "LLY": {
+    "name": "Eli Lilly and Company",
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers—General",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "DELL": {
+    "name": "Dell Technologies Inc.",
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "GEV": {
+    "name": "GE Vernova Inc.",
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "COST": {
+    "name": "Costco Wholesale Corporation",
+    "sector": "Consumer Defensive",
+    "industry": "Discount Stores",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "JPM": {
+    "name": "JPMorgan Chase & Co.",
+    "sector": "Financial Services",
+    "industry": "Banks—Diversified",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "ASML": {
+    "name": "ASML Holding N.V.",
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "APP": {
+    "name": "AppLovin Corporation",
+    "sector": "Communication Services",
+    "industry": "Advertising Agencies",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "PG": {
+    "name": "The Procter & Gamble Company",
+    "sector": "Consumer Defensive",
+    "industry": "Household & Personal Products",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CRWD": {
+    "name": "CrowdStrike Holdings, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "SOFI": {
+    "name": "SoFi Technologies, Inc.",
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "BABA": {
+    "name": "Alibaba Group Holding Limited",
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CAT": {
+    "name": "Caterpillar Inc.",
+    "sector": "Industrials",
+    "industry": "Farm & Heavy Construction Machinery",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "KLAC": {
+    "name": "KLA Corporation",
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "MSTR": {
+    "name": "Strategy Inc",
+    "sector": "Technology",
+    "industry": "Software—Application",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "V": {
+    "name": "Visa Inc.",
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "JNJ": {
+    "name": "Johnson & Johnson",
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers—General",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "UNH": {
+    "name": "UnitedHealth Group Incorporated",
+    "sector": "Healthcare",
+    "industry": "Healthcare Plans",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "NU": {
+    "name": "Nu Holdings Ltd.",
+    "sector": "Financial Services",
+    "industry": "Banks—Regional",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "PANW": {
+    "name": "Palo Alto Networks, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "WMT": {
+    "name": "Walmart Inc.",
+    "sector": "Consumer Defensive",
+    "industry": "Discount Stores",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "C": {
+    "name": "Citigroup Inc.",
+    "sector": "Financial Services",
+    "industry": "Banks—Diversified",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "AAL": {
+    "name": "American Airlines Group Inc.",
+    "sector": "Industrials",
+    "industry": "Airlines",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "ABBV": {
+    "name": "AbbVie Inc.",
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers—General",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "BAC": {
+    "name": "Bank of America Corporation",
+    "sector": "Financial Services",
+    "industry": "Banks—Diversified",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "DDOG": {
+    "name": "Datadog, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Application",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "QCOM": {
+    "name": "QUALCOMM Incorporated",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "XOM": {
+    "name": "ExxonMobil Holdings Corporation",
+    "sector": "Energy",
+    "industry": "Oil & Gas Integrated",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "BRK.B": {
+    "name": "Berkshire Hathaway Inc.",
+    "sector": "Financial Services",
+    "industry": "Insurance—Diversified",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "COHR": {
+    "name": "Coherent Corp.",
+    "sector": "Technology",
+    "industry": "Scientific & Technical Instruments",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "WFC": {
+    "name": "Wells Fargo & Company",
+    "sector": "Financial Services",
+    "industry": "Banks—Diversified",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "IREN": {
+    "name": "IREN Limited",
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "TXN": {
+    "name": "Texas Instruments Incorporated",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "PEP": {
+    "name": "PepsiCo, Inc.",
+    "sector": "Consumer Defensive",
+    "industry": "Beverages—Non-Alcoholic",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "CRM": {
+    "name": "Salesforce, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Application",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "NOW": {
+    "name": "ServiceNow, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Application",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CBRS": {
+    "name": "Cerebras Systems Inc.",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "RKLB": {
+    "name": "Rocket Lab Corporation",
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "VZ": {
+    "name": "Verizon Communications Inc.",
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CRWV": {
+    "name": "CoreWeave, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "GS": {
+    "name": "The Goldman Sachs Group, Inc.",
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CVX": {
+    "name": "Chevron Corporation",
+    "sector": "Energy",
+    "industry": "Oil & Gas Integrated",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "SNOW": {
+    "name": "Snowflake Inc.",
+    "sector": "Technology",
+    "industry": "Software—Application",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "ACN": {
+    "name": "Accenture plc",
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "IBM": {
+    "name": "International Business Machines Corporation",
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "T": {
+    "name": "AT&T Inc.",
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "ANET": {
+    "name": "Arista Networks, Inc.",
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "GLW": {
+    "name": "Corning Incorporated",
+    "sector": "Technology",
+    "industry": "Electronic Components",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "COIN": {
+    "name": "Coinbase Global, Inc.",
+    "sector": "Financial Services",
+    "industry": "Financial Data & Stock Exchanges",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "DIS": {
+    "name": "The Walt Disney Company",
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CRDO": {
+    "name": "Credo Technology Group Holding Ltd",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "NKE": {
+    "name": "NIKE, Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Footwear & Accessories",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "MRK": {
+    "name": "Merck & Co., Inc.",
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers—General",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "HPE": {
+    "name": "Hewlett Packard Enterprise Company",
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CVS": {
+    "name": "CVS Health Corporation",
+    "sector": "Healthcare",
+    "industry": "Healthcare Plans",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "VRT": {
+    "name": "Vertiv Holdings Co",
+    "sector": "Industrials",
+    "industry": "Electrical Equipment & Parts",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "AXP": {
+    "name": "American Express Company",
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "LIN": {
+    "name": "Linde plc",
+    "sector": "Basic Materials",
+    "industry": "Specialty Chemicals",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "NEE": {
+    "name": "NextEra Energy, Inc.",
+    "sector": "Utilities",
+    "industry": "Utilities—Regulated Electric",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "PATH": {
+    "name": "UiPath, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "HD": {
+    "name": "The Home Depot, Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Home Improvement Retail",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "DAL": {
+    "name": "Delta Air Lines, Inc.",
+    "sector": "Industrials",
+    "industry": "Airlines",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "ADI": {
+    "name": "Analog Devices, Inc.",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "SE": {
+    "name": "Sea Limited",
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "APH": {
+    "name": "Amphenol Corporation",
+    "sector": "Technology",
+    "industry": "Electronic Components",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "BA": {
+    "name": "The Boeing Company",
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "KO": {
+    "name": "The Coca-Cola Company",
+    "sector": "Consumer Defensive",
+    "industry": "Beverages—Non-Alcoholic",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "ARM": {
+    "name": "Arm Holdings plc",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "ALAB": {
+    "name": "Astera Labs, Inc.",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "TMUS": {
+    "name": "T-Mobile US, Inc.",
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "SYK": {
+    "name": "Stryker Corporation",
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "AAOI": {
+    "name": "Applied Optoelectronics, Inc.",
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "GE": {
+    "name": "GE Aerospace",
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "MCD": {
+    "name": "McDonald's Corporation",
+    "sector": "Consumer Cyclical",
+    "industry": "Restaurants",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "MA": {
+    "name": "Mastercard Incorporated",
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "MS": {
+    "name": "Morgan Stanley",
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "PM": {
+    "name": "Philip Morris International Inc.",
+    "sector": "Consumer Defensive",
+    "industry": "Tobacco",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "ALNY": {
+    "name": "Alnylam Pharmaceuticals, Inc.",
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "MPWR": {
+    "name": "Monolithic Power Systems, Inc.",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "GILD": {
+    "name": "Gilead Sciences, Inc.",
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers—General",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "ISRG": {
+    "name": "Intuitive Surgical, Inc.",
+    "sector": "Healthcare",
+    "industry": "Medical Instruments & Supplies",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "DHR": {
+    "name": "Danaher Corporation",
+    "sector": "Healthcare",
+    "industry": "Diagnostics & Research",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "PNC": {
+    "name": "The PNC Financial Services Group, Inc.",
+    "sector": "Financial Services",
+    "industry": "Banks—Regional",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "TD": {
+    "name": "The Toronto-Dominion Bank",
+    "sector": "Financial Services",
+    "industry": "Banks—Diversified",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "RDDT": {
+    "name": "Reddit, Inc.",
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "MELI": {
+    "name": "MercadoLibre, Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "UBER": {
+    "name": "Uber Technologies, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Application",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "SMCI": {
+    "name": "Super Micro Computer, Inc.",
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "BKNG": {
+    "name": "Booking Holdings Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Travel Services",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "ADBE": {
+    "name": "Adobe Inc.",
+    "sector": "Technology",
+    "industry": "Software—Application",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "RIVN": {
+    "name": "Rivian Automotive, Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Manufacturers",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "FCX": {
+    "name": "Freeport-McMoRan Inc.",
+    "sector": "Basic Materials",
+    "industry": "Copper",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "COP": {
+    "name": "ConocoPhillips",
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "VRTX": {
+    "name": "Vertex Pharmaceuticals Incorporated",
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "HUM": {
+    "name": "Humana Inc.",
+    "sector": "Healthcare",
+    "industry": "Healthcare Plans",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "INTU": {
+    "name": "Intuit Inc.",
+    "sector": "Technology",
+    "industry": "Software—Application",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "WULF": {
+    "name": "TeraWulf Inc.",
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "SHOP": {
+    "name": "Shopify Inc.",
+    "sector": "Technology",
+    "industry": "Software—Application",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "HCA": {
+    "name": "HCA Healthcare, Inc.",
+    "sector": "Healthcare",
+    "industry": "Medical Care Facilities",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CAH": {
+    "name": "Cardinal Health, Inc.",
+    "sector": "Healthcare",
+    "industry": "Medical Distribution",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "PFE": {
+    "name": "Pfizer Inc.",
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers—General",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "ABT": {
+    "name": "Abbott Laboratories",
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "F": {
+    "name": "Ford Motor Company",
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Manufacturers",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "IONS": {
+    "name": "Ionis Pharmaceuticals, Inc.",
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "FIX": {
+    "name": "Comfort Systems USA, Inc.",
+    "sector": "Industrials",
+    "industry": "Engineering & Construction",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "BMY": {
+    "name": "Bristol-Myers Squibb Company",
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers—General",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "TMO": {
+    "name": "Thermo Fisher Scientific Inc.",
+    "sector": "Healthcare",
+    "industry": "Diagnostics & Research",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "MRNA": {
+    "name": "Moderna, Inc.",
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "KR": {
+    "name": "The Kroger Co.",
+    "sector": "Consumer Defensive",
+    "industry": "Grocery Stores",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "TJX": {
+    "name": "The TJX Companies, Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Apparel Retail",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "AZN": {
+    "name": "AstraZeneca PLC",
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers—General",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "AZO": {
+    "name": "AutoZone, Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Parts",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "NOK": {
+    "name": "Nokia Oyj",
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "IONQ": {
+    "name": "IonQ, Inc.",
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "GMM": {
+    "name": "Global Mofy AI Limited",
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "NET": {
+    "name": "Cloudflare, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CMCSA": {
+    "name": "Comcast Corporation",
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "MDT": {
+    "name": "Medtronic plc",
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "AMGN": {
+    "name": "Amgen Inc.",
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers—General",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "CB": {
+    "name": "Chubb Limited",
+    "sector": "Financial Services",
+    "industry": "Insurance—Property & Casualty",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CRNX": {
+    "name": "Crinetics Pharmaceuticals, Inc.",
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "BLK": {
+    "name": "BlackRock, Inc.",
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "SCHW": {
+    "name": "The Charles Schwab Corporation",
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "WELL": {
+    "name": "Welltower Inc.",
+    "sector": "Real Estate",
+    "industry": "REIT—Healthcare Facilities",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "MCHP": {
+    "name": "Microchip Technology Incorporated",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "MARA": {
+    "name": "MARA Holdings, Inc.",
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "CIEN": {
+    "name": "Ciena Corporation",
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "HON": {
+    "name": "Honeywell International Inc.",
+    "sector": "Industrials",
+    "industry": "Conglomerates",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "ETN": {
+    "name": "Eaton Corporation plc",
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "TER": {
+    "name": "Teradyne, Inc.",
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "NTAP": {
+    "name": "NetApp, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "ON": {
+    "name": "ON Semiconductor Corporation",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "QXO": {
+    "name": "QXO, Inc.",
+    "sector": "Industrials",
+    "industry": "Industrial Distribution",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "SPGI": {
+    "name": "S&P Global Inc.",
+    "sector": "Financial Services",
+    "industry": "Financial Data & Stock Exchanges",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "FTNT": {
+    "name": "Fortinet, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "TTWO": {
+    "name": "Take-Two Interactive Software, Inc.",
+    "sector": "Communication Services",
+    "industry": "Electronic Gaming & Multimedia",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "SN": {
+    "name": "SharkNinja, Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Furnishings, Fixtures & Appliances",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "PWR": {
+    "name": "Quanta Services, Inc.",
+    "sector": "Industrials",
+    "industry": "Engineering & Construction",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "RTX": {
+    "name": "RTX Corporation",
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "BBIO": {
+    "name": "BridgeBio Pharma, Inc.",
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "VLO": {
+    "name": "Valero Energy Corporation",
+    "sector": "Energy",
+    "industry": "Oil & Gas Refining & Marketing",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "EXE": {
+    "name": "Expand Energy Corporation",
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "ASTS": {
+    "name": "AST SpaceMobile, Inc.",
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "UNP": {
+    "name": "Union Pacific Corporation",
+    "sector": "Industrials",
+    "industry": "Railroads",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "MPC": {
+    "name": "Marathon Petroleum Corporation",
+    "sector": "Energy",
+    "industry": "Oil & Gas Refining & Marketing",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "BSX": {
+    "name": "Boston Scientific Corporation",
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "FDX": {
+    "name": "FedEx Corporation",
+    "sector": "Industrials",
+    "industry": "Integrated Freight & Logistics",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "ZS": {
+    "name": "Zscaler, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "EQT": {
+    "name": "EQT Corporation",
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "MO": {
+    "name": "Altria Group, Inc.",
+    "sector": "Consumer Defensive",
+    "industry": "Tobacco",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "SPG": {
+    "name": "Simon Property Group, Inc.",
+    "sector": "Real Estate",
+    "industry": "REIT—Retail",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "NXPI": {
+    "name": "NXP Semiconductors N.V.",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "DASH": {
+    "name": "DoorDash, Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "ODFL": {
+    "name": "Old Dominion Freight Line, Inc.",
+    "sector": "Industrials",
+    "industry": "Trucking",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "UAL": {
+    "name": "United Airlines Holdings, Inc.",
+    "sector": "Industrials",
+    "industry": "Airlines",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "ROST": {
+    "name": "Ross Stores, Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Apparel Retail",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "PSX": {
+    "name": "Phillips 66",
+    "sector": "Energy",
+    "industry": "Oil & Gas Refining & Marketing",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CEG": {
+    "name": "Constellation Energy Corporation",
+    "sector": "Utilities",
+    "industry": "Utilities—Independent Power Producers",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "ONDS": {
+    "name": "Ondas Inc.",
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "SBUX": {
+    "name": "Starbucks Corporation",
+    "sector": "Consumer Cyclical",
+    "industry": "Restaurants",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "PENG": {
+    "name": "Penguin Solutions, Inc.",
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "PYPL": {
+    "name": "PayPal Holdings, Inc.",
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "MDB": {
+    "name": "MongoDB, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "STM": {
+    "name": "STMicroelectronics N.V.",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "CME": {
+    "name": "CME Group Inc.",
+    "sector": "Financial Services",
+    "industry": "Financial Data & Stock Exchanges",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "LOW": {
+    "name": "Lowe's Companies, Inc.",
+    "sector": "Consumer Cyclical",
+    "industry": "Home Improvement Retail",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "DE": {
+    "name": "Deere & Company",
+    "sector": "Industrials",
+    "industry": "Farm & Heavy Construction Machinery",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "OKTA": {
+    "name": "Okta, Inc.",
+    "sector": "Technology",
+    "industry": "Software—Infrastructure",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  },
+  "COF": {
+    "name": "Capital One Financial Corporation",
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "VST": {
+    "name": "Vistra Corp.",
+    "sector": "Utilities",
+    "industry": "Utilities—Independent Power Producers",
+    "exchange": "NYSE",
+    "quoteType": "EQUITY"
+  },
+  "FRMI": {
+    "name": "Fermi Inc.",
+    "sector": "Real Estate",
+    "industry": "REIT—Specialty",
+    "exchange": "NASDAQ",
+    "quoteType": "EQUITY"
+  }
+}

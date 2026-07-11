@@ -1,0 +1,79 @@
+name: Daily market data and Pages
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - data.json
+      - sector_cache.json
+  schedule:
+    - cron: "35 23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  update-data:
+    if: github.event_name != 'push' || github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify scoring rules
+        run: python -m unittest discover -s tests -v
+      - name: Calculate all 200 stocks
+        env:
+          CHART_WORKERS: "5"
+          PROFILE_WORKERS: "5"
+        run: python scripts/update_data.py
+      - name: Validate the universe and output
+        run: |
+          python - <<'PY'
+          import json
+          with open('data.json', encoding='utf-8') as f:
+              data = json.load(f)
+          assert data['counts']['requestedStocks'] == 200
+          assert len(data['stocks']) == 200
+          assert len(data['top20']) <= 20
+          assert len(data['indices']) == 7
+          assert len(data['sectors']) == 15
+          print(data['counts'])
+          PY
+      - name: Commit refreshed data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data.json sector_cache.json
+          git diff --cached --quiet || git commit -m "Daily discipline score update"
+          git push
+
+  deploy:
+    needs: [update-data]
+    if: always() && (needs.update-data.result == 'success' || needs.update-data.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
