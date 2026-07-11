@@ -1,7 +1,7 @@
 const state = { data: null, mode: "stocks", selectedId: null, timeframe: "daily" };
 const $ = (selector) => document.querySelector(selector);
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
-const maxima = { "トレンド構造": 18, "出来高の質": 25, "押し目の質": 17, "下方向ボラティリティ・下落速度": 15, "セクター対市場指数の強さ": 10, "個別株対セクターの強さ": 15 };
+const maxima = { "トレンド構造": 25, "出来高の質": 30, "押し目の質": 20, "下方向ボラティリティ・下落速度": 25 };
 
 function scoreClass(score) {
   if (score >= 80) return "score-high";
@@ -110,7 +110,7 @@ function chartSvg(rows) {
   }).join("");
   const candles = rows.map((row, index) => {
     const [, open, high, low, close, volume] = row;
-    const color = close >= open ? "#098267" : "#c33f50";
+    const color = close >= open ? "#008c6a" : "#c43b50";
     const bodyTop = Math.min(y(open), y(close));
     const bodyHeight = Math.max(1.3, Math.abs(y(open) - y(close)));
     const volumeHeight = (volume || 0) / volumeMax * (volumeBottom - volumeTop);
@@ -121,14 +121,14 @@ function chartSvg(rows) {
     return points ? `<polyline points="${points}" fill="none" stroke="${color}" stroke-width="1.7" vector-effect="non-scaling-stroke"/>` : "";
   };
   const labels = [0, Math.floor((rows.length - 1) / 2), rows.length - 1].map((index) => `<text x="${x(index)}" y="352" text-anchor="middle" fill="#7a8495" font-size="10">${esc(rows[index][0])}</text>`).join("");
-  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="ローソク足チャート">${grid}<line x1="${left}" y1="${volumeTop - 8}" x2="${width - right}" y2="${volumeTop - 8}" stroke="#dce3ec"/>${candles}${polyline(6, "#2457d6")}${polyline(7, "#b27600")}${labels}</svg>`;
+  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="ローソク足チャート">${grid}<line x1="${left}" y1="${volumeTop - 8}" x2="${width - right}" y2="${volumeTop - 8}" stroke="#d7dde4"/>${candles}${polyline(6, "#1264e6")}${polyline(7, "#20252b")}${labels}</svg>`;
 }
 
 function componentSection(item, timeframe) {
   const frame = item.timeframes[timeframe];
   const cards = Object.entries(frame.components).map(([name, score]) => {
     const maximum = maxima[name] || Math.max(score, 1);
-    return `<div class="component"><span>${esc(name)}</span><strong>${score}/${maximum}</strong><div class="component-bar"><b style="width:${Math.max(0, Math.min(100, score / maximum * 100))}%"></b></div></div>`;
+    return `<div class="component"><span>${esc(name)}</span><strong>${score}<small>/${maximum}</small></strong><div class="component-bar"><b style="width:${Math.max(0, Math.min(100, score / maximum * 100))}%"></b></div></div>`;
   }).join("");
   const details = Object.entries(frame.details).map(([name, score]) => `<tr><td>${esc(name)}</td><td>${score}</td></tr>`).join("");
   return `<div class="component-grid">${cards}</div><details class="details-disclosure"><summary>細かい配点を表示</summary><table class="fine-table"><thead><tr><th>判定項目</th><th>点数</th></tr></thead><tbody>${details}</tbody></table></details>`;
@@ -136,11 +136,12 @@ function componentSection(item, timeframe) {
 
 function auditSection(item) {
   const penalties = item.penalties;
+  const coreScore = (item.timeframes.daily.score * 0.5 + item.timeframes.weekly.score * 0.5).toFixed(1);
   const caps = Object.entries(item.caps).filter(([, value]) => value != null);
   const capRows = caps.length ? caps.map(([name, value]) => `<div class="audit-row"><span>${esc(name)}</span><strong>${value}</strong></div>`).join("") : `<div class="audit-row"><span>適用上限</span><strong>なし（110）</strong></div>`;
   const breakdownRows = Object.entries(penalties.breakdown.parts || {}).map(([name, value]) => `<tr><td>${esc(name)}</td><td>${esc(value.state)}</td><td>${value.points}</td></tr>`).join("");
   return `<div class="audit-grid">
-    <div class="audit-card"><h4>加点・減点</h4><div class="audit-row"><span>日足50％＋週足50％＋月足</span><strong>${item.baseScore}</strong></div><div class="audit-row"><span>月足構造ボーナス</span><strong>+${item.monthlyBonus.score}</strong></div><div class="audit-row"><span>3年下落減点</span><strong>−${penalties.threeYear.points}</strong></div><div class="audit-row"><span>単発急落減点</span><strong>−${penalties.acuteDownside.points}${penalties.acuteDownside.replaced ? "（移行済み）" : ""}</strong></div><div class="audit-row"><span>規律崩れ減点</span><strong>−${penalties.breakdown.points}</strong></div></div>
+    <div class="audit-card"><h4>加点・減点</h4><div class="audit-row"><span>日足50％＋週足50％</span><strong>${coreScore}</strong></div><div class="audit-row"><span>月足構造ボーナス</span><strong>+${item.monthlyBonus.score}</strong></div><div class="audit-row"><span>3年下落減点</span><strong>−${penalties.threeYear.points}</strong></div><div class="audit-row"><span>規律崩れ減点</span><strong>−${penalties.breakdown.points}</strong></div><div class="audit-row"><span>上限適用前</span><strong>${item.afterPenalties}</strong></div></div>
     <div class="audit-card"><h4>上限</h4>${capRows}<div class="audit-row"><span>最終適用上限</span><strong>${item.appliedCap === 110 ? "なし" : item.appliedCap}</strong></div><div class="audit-row"><span>健全な押し目保護</span><strong>${item.diagnostics.healthyPullback ? "適用" : "なし"}</strong></div></div>
   </div><details class="details-disclosure"><summary>規律崩れ点の内訳</summary><table class="fine-table"><thead><tr><th>項目</th><th>状態</th><th>点</th></tr></thead><tbody>${breakdownRows}</tbody></table></details>`;
 }
@@ -157,8 +158,8 @@ function renderDetail() {
   const frame = item.timeframes[state.timeframe];
   const warning = item.warning ? `<div class="metric-card warning-card"><span>警告・状態</span><strong>${esc(item.warning)}</strong></div>` : "";
   $("#detail-panel").innerHTML = `${detailHeader(item)}
-    <div class="score-hero"><div class="score-main"><span>規律可能性</span><strong class="${scoreClass(item.score)}">${item.score}</strong><small>/110</small></div><div class="score-context"><div class="metric-card"><span>日足</span><strong>${item.timeframes.daily.score}/100</strong></div><div class="metric-card"><span>週足</span><strong>${item.timeframes.weekly.score}/100</strong></div><div class="metric-card"><span>月足構造ボーナス</span><strong>+${item.monthlyBonus.score}/10</strong></div><div class="metric-card"><span>適用上限</span><strong>${item.appliedCap === 110 ? "なし" : item.appliedCap}</strong></div><div class="metric-card verdict-card"><span>判定</span><strong>${esc(item.verdict)}</strong></div>${warning}</div></div>
-    <div class="section"><div class="section-head"><h3>${state.timeframe === "daily" ? "日足" : "週足"}チャート</h3>${timeframeButtons()}</div><div class="chart-wrap">${chartSvg(frame.chart)}</div><div class="chart-legend"><span><i class="legend-dot" style="background:#2457d6"></i>${state.timeframe === "daily" ? "20日線" : "10週線"}</span><span><i class="legend-dot" style="background:#b27600"></i>${state.timeframe === "daily" ? "50日線" : "20週線"}</span><span>緑：上昇足　赤：下落足</span></div></div>
+    <div class="score-hero"><div class="score-main"><span>DISCIPLINE SCORE</span><strong class="${scoreClass(item.score)}">${item.score}</strong><small>/110</small></div><div class="score-context"><div class="metric-card"><span>日足</span><strong>${item.timeframes.daily.score}/100</strong></div><div class="metric-card"><span>週足</span><strong>${item.timeframes.weekly.score}/100</strong></div><div class="metric-card"><span>月足構造ボーナス</span><strong>+${item.monthlyBonus.score}/10</strong></div><div class="metric-card"><span>適用上限</span><strong>${item.appliedCap === 110 ? "なし" : item.appliedCap}</strong></div><div class="metric-card verdict-card"><span>判定</span><strong>${esc(item.verdict)}</strong></div>${warning}</div></div>
+    <div class="section"><div class="section-head"><h3>${state.timeframe === "daily" ? "日足" : "週足"}チャート</h3>${timeframeButtons()}</div><div class="chart-wrap">${chartSvg(frame.chart)}</div><div class="chart-legend"><span><i class="legend-dot legend-short"></i>${state.timeframe === "daily" ? "20日線" : "10週線"}</span><span><i class="legend-dot legend-mid"></i>${state.timeframe === "daily" ? "50日線" : "20週線"}</span><span>緑：上昇足　赤：下落足</span></div></div>
     <div class="section"><div class="section-head"><h3>${state.timeframe === "daily" ? "日足" : "週足"}の100点内訳</h3><span class="count-pill">${frame.score}/100</span></div>${componentSection(item, state.timeframe)}</div>
     <div class="section"><div class="section-head"><h3>減点・上限の監査</h3><span class="count-pill">崩れ点 ${item.penalties.breakdown.breakdownPoints}/20</span></div>${auditSection(item)}</div>`;
   bindTimeframeButtons();
@@ -178,7 +179,7 @@ function renderSearch(query) {
   if (!normalized) { root.hidden = true; root.innerHTML = ""; return; }
   const matches = state.data.stocks.filter((item) => `${item.symbol} ${item.name}`.toUpperCase().includes(normalized)).slice(0, 30);
   root.hidden = false;
-  root.innerHTML = matches.length ? matches.map((item) => `<button type="button" class="search-result" data-search-id="${esc(item.id)}"><strong>${esc(item.symbol)}</strong><span>${esc(item.name)}${item.sectorName ? ` · ${esc(item.sectorName)}` : ""}</span><b>${item.pending ? "保留" : item.score}</b></button>`).join("") : `<div class="empty-state" style="min-height:90px">200銘柄の中に一致するティッカーがありません。</div>`;
+  root.innerHTML = matches.length ? matches.map((item) => `<button type="button" class="search-result" data-search-id="${esc(item.id)}"><strong>${esc(item.symbol)}</strong><span>${esc(item.name)}${item.sectorName ? ` · ${esc(item.sectorName)}` : ""}</span><b>${item.pending ? "保留" : item.score}</b></button>`).join("") : `<div class="empty-state search-empty">${state.data.counts.requestedStocks}銘柄の中に一致するティッカーがありません。</div>`;
   root.querySelectorAll("[data-search-id]").forEach((button) => button.addEventListener("click", () => selectItem(button.dataset.searchId, true)));
 }
 

@@ -38,7 +38,7 @@ SEMICONDUCTORS = {
     "TER", "NXPI", "STM", "CRDO",
 }
 SPACE = {"SPCX", "RKLB", "ASTS", "ONDS"}
-BIOTECH = {"ALNY", "IONS", "MRNA", "CRNX", "AMGN", "BBIO"}
+BIOTECH = {"ALNY", "IONS", "MRNA", "AMGN", "BBIO"}
 METALS = {"FCX"}
 
 
@@ -153,8 +153,8 @@ def build_scored_item(identifier, symbol, category, record, sector_record, marke
 def main():
     universe = load_json(ROOT / "universe.json")
     stocks = universe["stocks"]
-    if len(stocks) != 200 or len(set(stocks)) != 200:
-        raise RuntimeError(f"The stock universe must contain exactly 200 unique symbols; got {len(stocks)} / {len(set(stocks))}.")
+    if len(stocks) != 199 or len(set(stocks)) != 199:
+        raise RuntimeError(f"The stock universe must contain exactly 199 unique symbols after removing CRNX; got {len(stocks)} / {len(set(stocks))}.")
 
     sector_cache = load_json(ROOT / "sector_cache.json")
     sector_cache = enrich_profiles(stocks, sector_cache)
@@ -225,10 +225,10 @@ def main():
     top20 = [item["id"] for item in ranked[:20]]
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "methodologyVersion": "confirmed-110-v1",
+        "methodologyVersion": "us-equity-discipline-v2",
         "dataSource": "Yahoo Finance chart API（最新完成日足）",
         "counts": {
-            "requestedStocks": 200,
+            "requestedStocks": len(stocks),
             "availableStocks": sum(1 for item in stock_items if not item.get("pending")),
             "pendingStocks": sum(1 for item in stock_items if item.get("pending")),
             "indices": len(index_items),

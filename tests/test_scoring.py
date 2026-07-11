@@ -10,7 +10,14 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from market_data import resample  # noqa: E402
-from scoring import monthly_bonus, random_market, score_asset  # noqa: E402
+from scoring import (  # noqa: E402
+    downside_expansion_penalty,
+    five_day_speed_penalty,
+    large_down_frequency_penalty,
+    monthly_bonus,
+    random_market,
+    score_asset,
+)
 
 
 def synthetic_daily(count=1100, *, growth=0.0007, volatility=0.012, volume=1_000_000):
@@ -41,10 +48,11 @@ def synthetic_daily(count=1100, *, growth=0.0007, volatility=0.012, volume=1_000
 
 
 class UniverseTests(unittest.TestCase):
-    def test_exactly_two_hundred_unique_stocks(self):
+    def test_exactly_one_hundred_ninety_nine_unique_stocks(self):
         universe = json.loads((ROOT / "universe.json").read_text(encoding="utf-8"))
-        self.assertEqual(len(universe["stocks"]), 200)
-        self.assertEqual(len(set(universe["stocks"])), 200)
+        self.assertEqual(len(universe["stocks"]), 199)
+        self.assertEqual(len(set(universe["stocks"])), 199)
+        self.assertNotIn("CRNX", universe["stocks"])
         self.assertEqual(len(universe["indices"]), 7)
         self.assertEqual(len(universe["sectors"]), 15)
 
@@ -82,6 +90,31 @@ class ScoringTests(unittest.TestCase):
         self.assertLessEqual(len(result["timeframes"]["daily"]["chart"]), 90)
         self.assertLessEqual(len(result["timeframes"]["weekly"]["chart"]), 70)
         self.assertNotIn("monthly", result["timeframes"])
+
+    def test_revised_four_component_allocation(self):
+        result = score_asset(
+            synthetic_daily(1100, growth=0.0009),
+            synthetic_daily(1100, growth=0.0006),
+            synthetic_daily(1100, growth=0.0004),
+        )
+        maxima = {
+            "トレンド構造": 25,
+            "出来高の質": 30,
+            "押し目の質": 20,
+            "下方向ボラティリティ・下落速度": 25,
+        }
+        for timeframe in ("daily", "weekly"):
+            components = result["timeframes"][timeframe]["components"]
+            self.assertEqual(set(components), set(maxima))
+            self.assertEqual(sum(components.values()), result["timeframes"][timeframe]["score"])
+            for name, score in components.items():
+                self.assertGreaterEqual(score, 0)
+                self.assertLessEqual(score, maxima[name])
+
+    def test_downside_thresholds_match_the_revised_tables(self):
+        self.assertEqual([downside_expansion_penalty(value) for value in (0.79, 0.8, 1.0, 1.2, 1.5)], [0, 1, 3, 5, 7])
+        self.assertEqual([five_day_speed_penalty(value) for value in (1.49, 1.5, 2.5, 3.5, 5.0)], [0, 2, 4, 6, 7])
+        self.assertEqual([large_down_frequency_penalty(value) for value in range(5)], [0, 2, 3, 4, 5])
 
 
 if __name__ == "__main__":

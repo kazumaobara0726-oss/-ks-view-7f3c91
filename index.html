@@ -8,17 +8,18 @@
   <meta name="googlebot" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
   <meta name="bingbot" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
   <meta name="referrer" content="no-referrer">
-  <title>規律可能性スコア</title>
+  <title>US Equity Discipline | 米国株 規律性スコア</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <header class="site-header">
     <div class="header-inner">
       <div class="brand-row">
-        <span class="brand-mark" aria-hidden="true">K</span>
-        <div>
-          <strong class="brand-name">規律可能性スコア</strong>
-          <span class="brand-sub">日足・週足・月足構造を110点で評価</span>
+        <span class="brand-mark" aria-hidden="true">ED</span>
+        <div class="brand-copy">
+          <span class="brand-kicker">US MARKET INTELLIGENCE</span>
+          <strong class="brand-name">US Equity Discipline</strong>
+          <span class="brand-sub">米国株の規律性を110点で可視化</span>
         </div>
         <div class="header-actions">
           <button class="plain-button" id="method-button" type="button">採点方法</button>
@@ -28,7 +29,7 @@
       <div class="search-wrap">
         <label class="search-box">
           <span aria-hidden="true">⌕</span>
-          <input id="search-input" type="search" autocomplete="off" placeholder="200銘柄からティッカー・会社名を検索" aria-label="個別株検索">
+          <input id="search-input" type="search" autocomplete="off" placeholder="199銘柄からティッカー・会社名を検索" aria-label="個別株検索">
         </label>
         <div class="search-results" id="search-results" hidden></div>
       </div>
@@ -43,11 +44,11 @@
   <main class="page-shell">
     <section class="summary-strip" aria-live="polite">
       <div><span>更新</span><strong id="updated-at">読み込み中</strong></div>
-      <div><span>個別株母集団</span><strong id="universe-count">200銘柄</strong></div>
+      <div><span>個別株母集団</span><strong id="universe-count">199銘柄</strong></div>
       <div><span>データ基準</span><strong>最新完成足</strong></div>
     </section>
 
-    <p class="notice">確定版110点方式による機械的なチャート評価です。月足は採点に使用しますが、画面には日足・週足だけを表示します。分析・学習補助用であり、売買推奨ではありません。</p>
+    <p class="notice"><strong>DISCIPLINE MODEL V2</strong> 日足・週足を4領域100点で採点し、月足構造と状態別の減点・上限を反映します。月足チャートは表示しません。分析・学習補助用であり、売買推奨ではありません。</p>
 
     <div class="workspace">
       <section class="list-panel panel">
@@ -70,16 +71,16 @@
   <dialog id="method-dialog" class="method-dialog">
     <form method="dialog" class="dialog-card">
       <div class="dialog-head">
-        <div><p class="eyebrow">CONFIRMED METHOD</p><h2>採点方法</h2></div>
+        <div><p class="eyebrow">DISCIPLINE MODEL V2</p><h2>採点方法</h2></div>
         <button class="dialog-close" value="close" aria-label="閉じる">×</button>
       </div>
       <div class="method-grid">
-        <section><h3>全体構造</h3><p>日足100点×50％＋週足100点×50％＋月足構造ボーナス最大10点。減点後、該当する最も低い上限を適用します。</p></section>
-        <section><h3>日足・週足の100点</h3><ul><li>トレンド構造 18</li><li>出来高の質 25</li><li>押し目の質 17</li><li>下方向ボラ・下落速度 15</li><li>セクター対市場 10</li><li>個別株対セクター 15</li></ul></section>
-        <section><h3>区別する状態</h3><p>健全な押し目、単発急落、短期ランダム、規律崩れ、バブル的急騰を別々に判定します。同一の急落を二重に満額減点しません。</p></section>
-        <section><h3>バブル表示</h3><p>4条件中3つ以上で「高規律・ハイリスク／警告：バブル的急騰」。急騰だけでは原則上限を付けず、その後の大陰線で79→69→59→49の上限を適用します。</p></section>
+        <section><h3>全体構造</h3><p>日足100点×50％＋週足100点×50％＋月足構造ボーナス最大10点。3年下落・規律崩れを減点し、該当する上限のうち最も低い値を適用します。</p></section>
+        <section><h3>日足・週足の100点</h3><ul><li>トレンド構造 25</li><li>出来高の質 30</li><li>押し目の質 20</li><li>下方向ボラティリティ・下落速度 25</li></ul></section>
+        <section><h3>下方向25点</h3><p>下方向ボラ拡大、5日以内の下落速度、大幅下落日の頻度、急落後の売り継続、日中値幅と終値位置を合計25点まで減点し、25点から差し引きます。</p></section>
+        <section><h3>状態別の上限</h3><p>月足ボーナス、規律崩れ、短期ランダム、バブル的急騰・崩壊、3年下落条件を従来どおり別判定します。相対強度2項目は100点配分から削除しています。</p></section>
       </div>
-      <p class="method-note">各銘柄の詳細画面で、日足・週足の6項目、月足ボーナス、減点、規律崩れ点、適用上限を確認できます。</p>
+      <p class="method-note">各銘柄の詳細画面で、日足・週足の4領域、細かい配点、月足ボーナス、減点、規律崩れ点、適用上限を確認できます。</p>
     </form>
   </dialog>
 

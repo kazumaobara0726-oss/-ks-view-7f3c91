@@ -1042,13 +1042,6 @@
     "exchange": "NYSE",
     "quoteType": "EQUITY"
   },
-  "CRNX": {
-    "name": "Crinetics Pharmaceuticals, Inc.",
-    "sector": "Healthcare",
-    "industry": "Biotechnology",
-    "exchange": "NASDAQ",
-    "quoteType": "EQUITY"
-  },
   "BLK": {
     "name": "BlackRock, Inc.",
     "sector": "Financial Services",

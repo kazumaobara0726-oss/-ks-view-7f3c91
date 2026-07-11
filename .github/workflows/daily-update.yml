@@ -29,7 +29,7 @@ jobs:
           python-version: "3.12"
       - name: Verify scoring rules
         run: python -m unittest discover -s tests -v
-      - name: Calculate all 200 stocks
+      - name: Calculate all 199 stocks
         env:
           CHART_WORKERS: "5"
           PROFILE_WORKERS: "5"
@@ -40,8 +40,9 @@ jobs:
           import json
           with open('data.json', encoding='utf-8') as f:
               data = json.load(f)
-          assert data['counts']['requestedStocks'] == 200
-          assert len(data['stocks']) == 200
+          assert data['counts']['requestedStocks'] == 199
+          assert len(data['stocks']) == 199
+          assert all(item['symbol'] != 'CRNX' for item in data['stocks'])
           assert len(data['top20']) <= 20
           assert len(data['indices']) == 7
           assert len(data['sectors']) == 15

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The confirmed 110-point discipline-possibility scoring model."""
+"""US Equity Discipline scoring model (methodology revision 2)."""
 
 from __future__ import annotations
 
@@ -75,23 +75,86 @@ def trend_score(bars, short_period, mid_period, long_period, structure_window):
     mid = moving_average(closes, mid_period)
     long = moving_average(closes, long_period)
     latest = closes[-1]
-    components = {
-        "株価が短期移動平均線より上": 3 if short[-1] is not None and latest > short[-1] else 0,
-        "短期線が中期線より上": 3 if short[-1] is not None and mid[-1] is not None and short[-1] > mid[-1] else 0,
-        "中期線が長期線より上": 3 if mid[-1] is not None and long[-1] is not None and mid[-1] > long[-1] else 0,
-        "短期線・中期線が上向き": 3
-        if len(bars) >= mid_period + 4
-        and short[-4] is not None
-        and mid[-4] is not None
-        and short[-1] > short[-4]
-        and mid[-1] > mid[-4]
-        else 0,
-    }
+    current_atr = max(atr(bars, min(20, len(bars))), 1e-9)
+    ma_values = (short[-1], mid[-1], long[-1])
+    if any(value is None for value in ma_values):
+        price_position = ordering = ma_slope = 0
+    else:
+        short_value, mid_value, long_value = ma_values
+        near_mid = max(abs(mid_value) * 0.015, current_atr * 0.35)
+        if latest > max(ma_values):
+            price_position = 6
+        elif latest < short_value and latest > mid_value and latest > long_value:
+            price_position = 4
+        elif abs(latest - mid_value) <= near_mid or (
+            latest >= mid_value * 0.98 and latest >= long_value * 0.98
+        ):
+            price_position = 2
+        else:
+            price_position = 0
+
+        near_order = max(abs(avg(ma_values)) * 0.012, current_atr * 0.25)
+        if short_value > mid_value > long_value:
+            ordering = 5
+        elif short_value > mid_value and abs(mid_value - long_value) <= near_order:
+            ordering = 3
+        elif max(ma_values) - min(ma_values) <= near_order * 1.5:
+            ordering = 1
+        else:
+            ordering = 0
+
+        slope_lookback = max(2, min(6, structure_window // 2))
+        previous_values = (short[-1 - slope_lookback], mid[-1 - slope_lookback], long[-1 - slope_lookback])
+        if any(value is None for value in previous_values):
+            ma_slope = 0
+        else:
+            short_up = short_value > previous_values[0]
+            mid_up = mid_value > previous_values[1]
+            long_up = long_value > previous_values[2]
+            flat_tolerance = max(abs(avg(ma_values)) * 0.001, current_atr * 0.08)
+            nearly_flat = all(abs(current - previous) <= flat_tolerance for current, previous in zip(ma_values, previous_values))
+            if short_up and mid_up and long_up:
+                ma_slope = 4
+            elif short_up and mid_up:
+                ma_slope = 3
+            elif mid_up:
+                ma_slope = 2
+            elif nearly_flat:
+                ma_slope = 1
+            else:
+                ma_slope = 0
+
     width = min(structure_window, max(3, len(bars) // 4))
     recent = bars[-width:]
     previous = bars[-2 * width : -width]
-    components["高値を切り上げている"] = 3 if previous and max(x["high"] for x in recent) > max(x["high"] for x in previous) else 0
-    components["安値を切り上げている"] = 3 if previous and min(x["low"] for x in recent) > min(x["low"] for x in previous) else 0
+    if previous:
+        recent_high = max(row["high"] for row in recent)
+        previous_high = max(row["high"] for row in previous)
+        recent_low = min(row["low"] for row in recent)
+        previous_low = min(row["low"] for row in previous)
+        higher_high = 4 if recent_high > previous_high + current_atr * 0.15 else 2 if recent_high >= previous_high - current_atr * 0.25 else 0
+        higher_low = 4 if recent_low > previous_low + current_atr * 0.15 else 2 if recent_low >= previous_low - current_atr * 0.25 else 0
+    else:
+        higher_high = higher_low = 0
+
+    smooth_window = min(max(10, structure_window * 2), len(bars) - 1)
+    smooth_return = price_return(bars, smooth_window)
+    smooth_er = efficiency_ratio(bars, smooth_window)
+    if smooth_return > 0 and smooth_er >= 0.45:
+        smoothness = 2
+    elif smooth_return >= 0 and smooth_er >= 0.20:
+        smoothness = 1
+    else:
+        smoothness = 0
+
+    components = {
+        "株価と移動平均線の位置関係": price_position,
+        "移動平均線の並び": ordering,
+        "移動平均線の傾き": ma_slope,
+        "高値切り上げ": higher_high,
+        "安値切り上げ": higher_low,
+        "上昇の継続性・滑らかさ": smoothness,
+    }
     return sum(components.values()), components, {"short": short, "mid": mid, "long": long}
 
 
@@ -99,7 +162,7 @@ def volume_quality(bars, breakout_window):
     recent = bars[-max(60, breakout_window * 3) :]
     volumes = [bar["volume"] for bar in recent if bar["volume"] > 0]
     if len(volumes) < 12:
-        return 12, {"上昇足と下落足の出来高比": 4, "出来高の継続性": 4, "ブレイク時の出来高": 2, "下落時の出来高": 2}, True
+        return 15, {"上昇足と下落足の出来高比": 4, "出来高の継続性": 4, "ブレイク時の出来高": 3, "下落時の出来高": 4}, True
     up = []
     down = []
     for index in range(1, len(recent)):
@@ -108,11 +171,11 @@ def volume_quality(bars, breakout_window):
             target.append(recent[index]["volume"])
     ratio = avg(up) / max(avg(down), 1)
     if ratio >= 1.50:
-        ratio_score = 8
+        ratio_score = 9
     elif ratio >= 1.30:
-        ratio_score = 6
+        ratio_score = 7
     elif ratio >= 1.10:
-        ratio_score = 4
+        ratio_score = 5
     elif ratio >= 0.90:
         ratio_score = 2
     else:
@@ -123,13 +186,19 @@ def volume_quality(bars, breakout_window):
     buckets = [sample[index : index + bucket_size] for index in range(0, len(sample), bucket_size)][-4:]
     bucket_volumes = [avg([row["volume"] for row in bucket]) for bucket in buckets if bucket]
     bucket_closes = [bucket[-1]["close"] for bucket in buckets if bucket]
-    if len(bucket_volumes) >= 3 and all(bucket_volumes[i] >= bucket_volumes[i - 1] * 0.98 for i in range(1, len(bucket_volumes))) and bucket_closes[-1] > bucket_closes[0]:
+    price_rising = len(bucket_closes) >= 3 and bucket_closes[-1] > bucket_closes[0]
+    continuously_rising = len(bucket_volumes) >= 3 and all(
+        bucket_volumes[index] >= bucket_volumes[index - 1] * 0.97 for index in range(1, len(bucket_volumes))
+    ) and bucket_volumes[-1] >= bucket_volumes[0] * 1.10
+    high_level = len(bucket_volumes) >= 3 and min(bucket_volumes[-3:]) >= bucket_volumes[0] * 1.05
+    stable = bucket_volumes and max(bucket_volumes) <= max(min(bucket_volumes), 1) * 1.35
+    if price_rising and continuously_rising:
+        persistence = 8
+    elif price_rising and high_level:
         persistence = 7
-    elif len(bucket_volumes) >= 3 and min(bucket_volumes[-3:]) >= avg(bucket_volumes) * 1.05 and bucket_closes[-1] > bucket_closes[0]:
-        persistence = 6
-    elif bucket_closes and bucket_closes[-1] > bucket_closes[0] and max(bucket_volumes) <= max(min(bucket_volumes), 1) * 1.6:
-        persistence = 4
-    elif max(volumes[-20:]) >= avg(volumes[-20:]) * 1.8:
+    elif price_rising and stable:
+        persistence = 5
+    elif max(volumes[-20:]) >= max(median(volumes[-20:]), 1) * 1.8:
         persistence = 2
     else:
         persistence = 0
@@ -142,9 +211,9 @@ def volume_quality(bars, breakout_window):
             breakout_ratios.append(recent[index]["volume"] / max(base_volume, 1))
     breakout_ratio = max(breakout_ratios[-5:], default=0)
     if breakout_ratio >= 2.0:
-        breakout = 5
+        breakout = 6
     elif breakout_ratio >= 1.5:
-        breakout = 4
+        breakout = 5
     elif breakout_ratio >= 1.2:
         breakout = 3
     elif breakout_ratio >= 1.0:
@@ -152,13 +221,16 @@ def volume_quality(bars, breakout_window):
     else:
         breakout = 0
 
-    down_ratio = avg(down) / max(avg(up), 1)
+    down_average = avg(down)
+    up_average = avg(up)
+    all_average = avg(volumes)
+    down_ratio = down_average / max(up_average, 1)
     if down_ratio <= 0.70:
+        down_score = 7
+    elif down_average <= all_average:
         down_score = 5
-    elif down_ratio < 1.0:
-        down_score = 4
-    elif down_ratio <= 1.20:
-        down_score = 2
+    elif down_ratio <= 1.15:
+        down_score = 3
     else:
         down_score = 0
     parts = {
@@ -192,7 +264,7 @@ def relative_direction(series, short_period, mid_period):
     return short_change, mid_change
 
 
-def pullback_quality(bars, ma, rs_series, lookback):
+def pullback_quality(bars, ma, lookback):
     current = bars[-1]["close"]
     window = bars[-min(len(bars), lookback) :]
     high_local = max(range(len(window)), key=lambda index: window[index]["high"])
@@ -202,22 +274,28 @@ def pullback_quality(bars, ma, rs_series, lookback):
     rise = max(high_bar["high"] - start_bar["low"], 1e-9)
     retracement = max(0.0, (high_bar["high"] - current) / rise)
     if retracement <= 0.236:
-        depth = 5
+        depth = 6
     elif retracement <= 0.382:
-        depth = 4
+        depth = 5
     elif retracement <= 0.50:
-        depth = 2
+        depth = 3
+    elif retracement <= 0.618:
+        depth = 1
     else:
         depth = 0
 
     short_value = ma["short"][-1]
     mid_value = ma["mid"][-1]
+    current_atr = max(atr(bars, min(20, len(bars))), 1e-9)
     prior_low = min(row["low"] for row in window[:-1]) if len(window) > 1 else current
     if short_value is not None and current >= short_value:
-        support = 4
+        support = 5
     elif mid_value is not None and current > mid_value:
-        support = 3
-    elif mid_value is not None and current >= mid_value * 0.98:
+        support = 4
+    elif mid_value is not None and (
+        abs(current - mid_value) <= max(abs(mid_value) * 0.02, current_atr * 0.40)
+        or abs(current - prior_low) <= current_atr * 0.35
+    ):
         support = 2
     elif mid_value is not None and (current < mid_value or current < prior_low):
         support = 0
@@ -230,95 +308,174 @@ def pullback_quality(bars, ma, rs_series, lookback):
     rise_volume = avg([row["volume"] for row in rise_rows if row["volume"] > 0])
     overall_volume = avg([row["volume"] for row in window if row["volume"] > 0])
     if pullback_volume and rise_volume and pullback_volume <= rise_volume * 0.70:
-        pullback_volume_score = 4
+        pullback_volume_score = 5
     elif pullback_volume and pullback_volume <= max(overall_volume, 1):
-        pullback_volume_score = 3
+        pullback_volume_score = 4
     elif pullback_volume and rise_volume and pullback_volume <= rise_volume * 1.15:
-        pullback_volume_score = 1
+        pullback_volume_score = 2
     else:
         pullback_volume_score = 0
 
     structure_width = max(3, min(10, len(bars) // 6))
     recent_low = min(row["low"] for row in bars[-structure_width:])
     previous_low = min(row["low"] for row in bars[-2 * structure_width : -structure_width])
-    higher_low = 2 if previous_low and recent_low > previous_low else 0
-    rs_short = relative_change(rs_series, min(20, max(2, len(rs_series) // 4)))
-    rs_maintained = 2 if rs_short >= -0.02 else 0
+    low_tolerance = current_atr * 0.25
+    if previous_low and recent_low > previous_low + low_tolerance and current >= recent_low + current_atr * 0.40:
+        stopping = 4
+    elif previous_low and recent_low > previous_low and current >= recent_low:
+        stopping = 3
+    elif previous_low and recent_low >= previous_low - low_tolerance:
+        stopping = 1
+    else:
+        stopping = 0
     parts = {
         "直前上昇に対する押しの深さ": depth,
-        "移動平均線・支持帯の維持": support,
+        "支持線・移動平均線の維持": support,
         "押し目中の出来高": pullback_volume_score,
-        "安値切り上げ": higher_low,
-        "RSの維持": rs_maintained,
+        "安値切り上げ・停止力": stopping,
     }
     return sum(parts.values()), parts, retracement
 
 
+def downside_volatility(bars):
+    if len(bars) < 2:
+        return 0.0
+    values = []
+    for index in range(1, len(bars)):
+        previous = bars[index - 1]["close"]
+        downside = max(0.0, previous - bars[index]["low"]) / max(previous, 1e-9)
+        values.append(downside)
+    return math.sqrt(avg([value * value for value in values]))
+
+
+def downside_expansion_penalty(expansion):
+    if expansion < 0.8:
+        return 0
+    if expansion < 1.0:
+        return 1
+    if expansion < 1.2:
+        return 3
+    if expansion < 1.5:
+        return 5
+    return 7
+
+
+def five_day_speed_penalty(drop_atr):
+    if drop_atr < 1.5:
+        return 0
+    if drop_atr < 2.5:
+        return 2
+    if drop_atr < 3.5:
+        return 4
+    if drop_atr < 5.0:
+        return 6
+    return 7
+
+
+def large_down_frequency_penalty(count):
+    if count <= 0:
+        return 0
+    if count == 1:
+        return 2
+    if count == 2:
+        return 3
+    if count == 3:
+        return 4
+    return 5
+
+
 def downside_quality(bars):
-    current_atr = max(atr(bars, 20), 1e-9)
-    previous_close = bars[-2]["close"]
-    current = bars[-1]
-    shock = max(0.0, (previous_close - current["close"]) / current_atr)
-    if shock < 0.75:
-        one_bar = 4
-    elif shock < 1.25:
-        one_bar = 3
-    elif shock < 1.75:
-        one_bar = 1
-    else:
-        one_bar = 0
+    current_atr = max(atr(bars, min(20, len(bars))), 1e-9)
+    recent_slice = bars[-11:]
+    baseline_slice = bars[-71:-10] if len(bars) >= 71 else bars[:-10]
+    recent_downside = downside_volatility(recent_slice)
+    baseline_downside = downside_volatility(baseline_slice)
+    expansion = recent_downside / max(baseline_downside, 1e-9)
+    volatility_penalty = downside_expansion_penalty(expansion)
 
-    search = bars[-min(30, len(bars)) :]
-    high_index = max(range(len(search)), key=lambda index: search[index]["high"])
-    high = search[high_index]["high"]
-    elapsed = max(1, len(search) - 1 - high_index)
-    speed = max(0.0, high - current["close"]) / (elapsed * current_atr)
-    if speed < 0.30:
-        multi = 4
-    elif speed < 0.60:
-        multi = 3
-    elif speed < 0.90:
-        multi = 1
-    else:
-        multi = 0
+    recent_five = bars[-6:]
+    five_day_drop = max(0.0, max(row["high"] for row in recent_five[:-1]) - bars[-1]["close"]) / current_atr
+    speed_penalty = five_day_speed_penalty(five_day_drop)
 
-    ranges = true_ranges(bars)
-    recent_range = avg(ranges[-3:])
-    prior_range = avg(ranges[-6:-3])
-    new_low = current["low"] <= min(row["low"] for row in bars[-6:-1])
-    down_bars = sum(1 for index in range(-3, 0) if bars[index]["close"] < bars[index - 1]["close"])
-    if recent_range < prior_range * 0.85 and not new_low:
-        acceleration = 3
-    elif recent_range <= prior_range * 1.15 and down_bars < 3:
-        acceleration = 2
-    elif recent_range <= prior_range * 1.5 or not new_low:
-        acceleration = 1
-    else:
-        acceleration = 0
+    large_down_days = 0
+    recent_twenty_start = max(1, len(bars) - 20)
+    for index in range(recent_twenty_start, len(bars)):
+        down_move = max(0.0, bars[index - 1]["close"] - bars[index]["close"])
+        if down_move >= current_atr:
+            large_down_days += 1
+    frequency_penalty = large_down_frequency_penalty(large_down_days)
 
-    gap_down = current["open"] < previous_close - current_atr * 0.50
-    close_position = (current["close"] - current["low"]) / max(current["high"] - current["low"], 1e-9)
-    if not gap_down and close_position >= 0.50:
-        gap_close = 2
-    elif not gap_down and close_position >= 0.25:
-        gap_close = 1
+    crash_index = None
+    for index in range(max(1, len(bars) - 20), len(bars)):
+        close_drop = max(0.0, bars[index - 1]["close"] - bars[index]["close"])
+        bearish_body = max(0.0, bars[index]["open"] - bars[index]["close"])
+        if close_drop >= current_atr * 1.5 or bearish_body >= current_atr * 1.25:
+            crash_index = index
+    continuation_penalty = 0
+    continuation_state = "安値更新なし・反発"
+    if crash_index is not None and crash_index < len(bars) - 1:
+        crash_low = bars[crash_index]["low"]
+        running_low = crash_low
+        new_lows = 0
+        reacceleration = False
+        for index in range(crash_index + 1, len(bars)):
+            if bars[index]["low"] < running_low:
+                new_lows += 1
+                running_low = bars[index]["low"]
+            close_drop = max(0.0, bars[index - 1]["close"] - bars[index]["close"])
+            bearish_body = max(0.0, bars[index]["open"] - bars[index]["close"])
+            if close_drop >= current_atr * 1.5 or bearish_body >= current_atr * 1.5:
+                reacceleration = True
+        if reacceleration and new_lows:
+            continuation_penalty, continuation_state = 3, "大陰線再発・下落加速"
+        elif new_lows >= 2:
+            continuation_penalty, continuation_state = 2, "複数回安値更新"
+        elif new_lows == 1:
+            continuation_penalty, continuation_state = 1, "一度だけ安値更新"
+
+    recent_intraday = bars[-5:]
+    weak_closes = 0
+    lower_breaks = 0
+    gap_downs = 0
+    for index in range(len(bars) - len(recent_intraday), len(bars)):
+        row = bars[index]
+        close_position = (row["close"] - row["low"]) / max(row["high"] - row["low"], 1e-9)
+        if close_position <= 0.25:
+            weak_closes += 1
+        if index > 0 and row["low"] < bars[index - 1]["low"] and close_position < 0.50:
+            lower_breaks += 1
+        if index > 0 and row["open"] < bars[index - 1]["close"] - current_atr * 0.50:
+            gap_downs += 1
+    latest_position = (bars[-1]["close"] - bars[-1]["low"]) / max(bars[-1]["high"] - bars[-1]["low"], 1e-9)
+    if gap_downs and weak_closes >= 2:
+        intraday_penalty, intraday_state = 3, "窓下げ＋安値圏引けが反復"
+    elif weak_closes >= 2 or lower_breaks >= 2:
+        intraday_penalty, intraday_state = 2, "安値圏引けが複数回"
+    elif weak_closes == 1 or lower_breaks == 1:
+        intraday_penalty, intraday_state = 1, "安値圏引けが1回"
+    elif latest_position >= 0.50:
+        intraday_penalty, intraday_state = 0, "安値から戻して終了"
     else:
-        gap_close = 0
-    prior_three_low = min(row["low"] for row in bars[-4:-1])
-    if current["low"] > prior_three_low and current["close"] >= current["low"] + current_atr * 0.50:
-        stop = 2
-    elif recent_range < prior_range or not new_low:
-        stop = 1
-    else:
-        stop = 0
-    parts = {
-        "1本のローソク足の下落衝撃": one_bar,
-        "複数期間の下落速度": multi,
-        "下落の加速・減速": acceleration,
-        "窓下げ・終値位置": gap_close,
-        "下落停止・反発力": stop,
+        intraday_penalty, intraday_state = 0, "明確な弱さなし"
+
+    penalties = {
+        "下方向ボラティリティの拡大": volatility_penalty,
+        "5日以内の下落速度": speed_penalty,
+        "大幅下落日の頻度": frequency_penalty,
+        "急落後の売り継続": continuation_penalty,
+        "日中値幅・終値位置": intraday_penalty,
     }
-    return sum(parts.values()), parts, {"shock": shock, "speed": speed, "atr": current_atr, "closePosition": close_position}
+    total_penalty = min(25, sum(penalties.values()))
+    parts = {name: -points for name, points in penalties.items()}
+    return 25 - total_penalty, parts, {
+        "downsideExpansion": expansion,
+        "fiveDayDropAtr": five_day_drop,
+        "largeDownDayCount": large_down_days,
+        "continuationState": continuation_state,
+        "intradayState": intraday_state,
+        "downsidePenalty": total_penalty,
+        "atr": current_atr,
+    }
 
 
 def sector_relative_score(sector_series, short_period, mid_period):
@@ -368,32 +525,26 @@ def stock_relative_score(stock_series, sector_series, short_period, mid_period):
 def timeframe_score(asset_bars, sector_bars, market_bars, timeframe, single_level=False):
     if timeframe == "daily":
         short_period, mid_period, long_period = 20, 50, 200
-        rs_short, rs_mid, structure, pullback_window, breakout = 20, 60, 10, 60, 20
+        structure, pullback_window, breakout = 10, 60, 20
     else:
         short_period, mid_period, long_period = 10, 20, 40
-        rs_short, rs_mid, structure, pullback_window, breakout = 13, 26, 6, 26, 10
+        structure, pullback_window, breakout = 6, 26, 10
     trend, trend_parts, ma = trend_score(asset_bars, short_period, mid_period, long_period, structure)
     volume, volume_parts, volume_proxy_missing = volume_quality(asset_bars, breakout)
     sector_rs_series = relative_series(sector_bars, market_bars)
     if single_level:
         stock_rs_series = relative_series(asset_bars, market_bars)
-        comparison_rs_series = [(stamp, 1.0) for stamp, _ in stock_rs_series]
     else:
         stock_rs_series = relative_series(asset_bars, sector_bars)
-        comparison_rs_series = sector_rs_series
-    pullback, pullback_parts, retracement = pullback_quality(asset_bars, ma, stock_rs_series, pullback_window)
+    pullback, pullback_parts, retracement = pullback_quality(asset_bars, ma, pullback_window)
     downside, downside_parts, downside_metrics = downside_quality(asset_bars)
-    sector_rs, sector_parts, sector_metrics = sector_relative_score(sector_rs_series, rs_short, rs_mid)
-    stock_rs, stock_parts, stock_metrics = stock_relative_score(stock_rs_series, comparison_rs_series, rs_short, rs_mid)
     components = {
         "トレンド構造": trend,
         "出来高の質": volume,
         "押し目の質": pullback,
         "下方向ボラティリティ・下落速度": downside,
-        "セクター対市場指数の強さ": sector_rs,
-        "個別株対セクターの強さ": stock_rs,
     }
-    details = {**trend_parts, **volume_parts, **pullback_parts, **downside_parts, **sector_parts, **stock_parts}
+    details = {**trend_parts, **volume_parts, **pullback_parts, **downside_parts}
     return {
         "score": int(round(sum(components.values()))),
         "components": components,
@@ -401,10 +552,6 @@ def timeframe_score(asset_bars, sector_bars, market_bars, timeframe, single_leve
         "metrics": {
             **downside_metrics,
             "retracement": retracement,
-            "sectorRsShort": sector_metrics[0],
-            "sectorRsMedium": sector_metrics[1],
-            "stockRsShort": stock_metrics[0],
-            "stockRsMedium": stock_metrics[1],
             "volumeProxyMissing": volume_proxy_missing,
         },
         "ma": ma,
@@ -824,30 +971,19 @@ def score_asset(daily, sector_daily, market_daily, single_level=False):
     month_bonus, month_parts, month_cap = monthly_bonus(monthly, day["score"], week["score"], weekly)
     three_penalty, three_change = three_year_penalty(daily)
     long_cap, long_checks = long_decline_cap(daily, weekly, three_change)
-    acute_penalty, acute = acute_downside_penalty(daily)
     random_cap_day, random_day = random_market(daily)
     random_cap_week, random_week = random_market(weekly, weekly=True)
     random_cap_value = min([cap for cap in (random_cap_day, random_cap_week) if cap is not None], default=None)
     breakdown, breakdown_parts = breakdown_points(daily, weekly, day["stockRsSeries"], day["sectorRsSeries"], week["stockRsSeries"], week["sectorRsSeries"])
     breakdown_penalty, breakdown_cap, breakdown_state = breakdown_adjustment(breakdown)
-    forced_cap, forced_reasons = crash_cap(daily, weekly)
     bubble, bubble_metrics = bubble_state(daily, weekly)
     bubble_cap, bubble_collapse = bubble_collapse_cap(daily, bubble)
     healthy = healthy_pullback(weekly, week["stockRsSeries"])
-    if healthy:
-        acute_penalty = min(acute_penalty, 5)
-    if breakdown >= 7 or random_cap_value is not None or forced_cap is not None:
-        effective_acute = 0
-        acute_replaced = acute_penalty > 0
-    else:
-        effective_acute = acute_penalty
-        acute_replaced = False
     base = day["score"] * 0.5 + week["score"] * 0.5 + month_bonus
-    after_penalties = base - three_penalty - breakdown_penalty - effective_acute
+    after_penalties = base - three_penalty - breakdown_penalty
     caps = {
         "規律崩れ上限": breakdown_cap,
         "短期ランダム相場上限": random_cap_value,
-        "急落強制上限": forced_cap,
         "長期下降上限": long_cap,
         "バブル崩壊上限": bubble_cap,
     }
@@ -862,7 +998,7 @@ def score_asset(daily, sector_daily, market_daily, single_level=False):
         warning = "短期ランダム相場"
     else:
         verdict = score_band(final_score)
-        warning = bubble_collapse or (forced_reasons[0] if forced_reasons else None)
+        warning = bubble_collapse
     return {
         "pending": False,
         "score": final_score,
@@ -878,7 +1014,6 @@ def score_asset(daily, sector_daily, market_daily, single_level=False):
         "monthlyBonus": {"score": month_bonus, "rawParts": month_parts, "cap": month_cap},
         "penalties": {
             "threeYear": {"points": three_penalty, "return": three_change},
-            "acuteDownside": {"points": effective_acute, "replaced": acute_replaced, **acute},
             "breakdown": {"points": breakdown_penalty, "breakdownPoints": breakdown, "state": breakdown_state, "parts": breakdown_parts},
         },
         "caps": caps,
@@ -888,7 +1023,6 @@ def score_asset(daily, sector_daily, market_daily, single_level=False):
             "randomWeekly": random_week,
             "bubble": bubble_metrics,
             "bubbleCollapse": bubble_collapse,
-            "forcedCapReasons": forced_reasons,
             "longDeclineChecks": long_checks,
         },
     }
