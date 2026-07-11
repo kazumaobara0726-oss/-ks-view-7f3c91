@@ -116,6 +116,48 @@ class ScoringTests(unittest.TestCase):
         self.assertEqual([five_day_speed_penalty(value) for value in (1.49, 1.5, 2.5, 3.5, 5.0)], [0, 2, 4, 6, 7])
         self.assertEqual([large_down_frequency_penalty(value) for value in range(5)], [0, 2, 3, 4, 5])
 
+    def test_revised_subcomponent_schema_matches_the_fourteen_screenshots(self):
+        result = score_asset(
+            synthetic_daily(1100, growth=0.0009),
+            synthetic_daily(1100, growth=0.0006),
+            synthetic_daily(1100, growth=0.0004),
+        )
+        expected_details = {
+            "株価と移動平均線の位置関係",
+            "移動平均線の並び",
+            "移動平均線の傾き",
+            "高値切り上げ",
+            "安値切り上げ",
+            "上昇の継続性・滑らかさ",
+            "上昇足と下落足の出来高比",
+            "出来高の継続性",
+            "ブレイク時の出来高",
+            "下落時の出来高",
+            "直前上昇に対する押しの深さ",
+            "支持線・移動平均線の維持",
+            "押し目中の出来高",
+            "安値切り上げ・停止力",
+            "下方向ボラティリティの拡大",
+            "5日以内の下落速度",
+            "大幅下落日の頻度",
+            "急落後の売り継続",
+            "日中値幅・終値位置",
+        }
+        expected_metrics = {
+            "downsideExpansion",
+            "fiveDayDropAtr",
+            "largeDownDayCount",
+            "continuationState",
+            "intradayState",
+            "downsidePenalty",
+        }
+        for timeframe in ("daily", "weekly"):
+            frame = result["timeframes"][timeframe]
+            self.assertEqual(set(frame["details"]), expected_details)
+            self.assertTrue(expected_metrics.issubset(frame["metrics"]))
+            self.assertGreaterEqual(frame["components"]["下方向ボラティリティ・下落速度"], 0)
+            self.assertLessEqual(frame["components"]["下方向ボラティリティ・下落速度"], 25)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -106,11 +106,11 @@ function chartSvg(rows) {
   const grid = Array.from({ length: 5 }, (_, index) => {
     const value = max - (max - min) * index / 4;
     const py = y(value);
-    return `<line x1="${left}" y1="${py}" x2="${width - right}" y2="${py}" stroke="#e7ebf1" stroke-width="1"/><text x="${width - right + 7}" y="${py + 4}" fill="#7a8495" font-size="10">${value.toLocaleString("ja-JP", { maximumFractionDigits: value >= 100 ? 1 : 2 })}</text>`;
+    return `<line x1="${left}" y1="${py}" x2="${width - right}" y2="${py}" stroke="#2a313a" stroke-width="1"/><text x="${width - right + 7}" y="${py + 4}" fill="#8e99a8" font-size="10">${value.toLocaleString("ja-JP", { maximumFractionDigits: value >= 100 ? 1 : 2 })}</text>`;
   }).join("");
   const candles = rows.map((row, index) => {
     const [, open, high, low, close, volume] = row;
-    const color = close >= open ? "#008c6a" : "#c43b50";
+    const color = close >= open ? "#34d3a0" : "#ff667d";
     const bodyTop = Math.min(y(open), y(close));
     const bodyHeight = Math.max(1.3, Math.abs(y(open) - y(close)));
     const volumeHeight = (volume || 0) / volumeMax * (volumeBottom - volumeTop);
@@ -120,8 +120,26 @@ function chartSvg(rows) {
     const points = rows.map((row, index) => row[position] == null ? null : `${x(index)},${y(row[position])}`).filter(Boolean).join(" ");
     return points ? `<polyline points="${points}" fill="none" stroke="${color}" stroke-width="1.7" vector-effect="non-scaling-stroke"/>` : "";
   };
-  const labels = [0, Math.floor((rows.length - 1) / 2), rows.length - 1].map((index) => `<text x="${x(index)}" y="352" text-anchor="middle" fill="#7a8495" font-size="10">${esc(rows[index][0])}</text>`).join("");
-  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="ローソク足チャート">${grid}<line x1="${left}" y1="${volumeTop - 8}" x2="${width - right}" y2="${volumeTop - 8}" stroke="#d7dde4"/>${candles}${polyline(6, "#1264e6")}${polyline(7, "#20252b")}${labels}</svg>`;
+  const labels = [0, Math.floor((rows.length - 1) / 2), rows.length - 1].map((index) => `<text x="${x(index)}" y="352" text-anchor="middle" fill="#8e99a8" font-size="10">${esc(rows[index][0])}</text>`).join("");
+  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="ローソク足チャート">${grid}<line x1="${left}" y1="${volumeTop - 8}" x2="${width - right}" y2="${volumeTop - 8}" stroke="#343d48"/>${candles}${polyline(6, "#5f9cff")}${polyline(7, "#f1c75b")}${labels}</svg>`;
+}
+
+function metricNumber(value, digits = 2) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number.toFixed(digits) : "—";
+}
+
+function downsideDiagnostics(frame) {
+  const metrics = frame.metrics || {};
+  const details = frame.details || {};
+  const rows = [
+    ["下方向ボラティリティの拡大", `${metricNumber(metrics.downsideExpansion)}倍`, details["下方向ボラティリティの拡大"]],
+    ["5日以内の下落速度", `${metricNumber(metrics.fiveDayDropAtr)} ATR`, details["5日以内の下落速度"]],
+    ["大幅下落日の頻度", `${Number(metrics.largeDownDayCount || 0)}回`, details["大幅下落日の頻度"]],
+    ["急落後の売り継続", metrics.continuationState || "—", details["急落後の売り継続"]],
+    ["日中値幅・終値位置", metrics.intradayState || "—", details["日中値幅・終値位置"]],
+  ];
+  return `<div class="downside-audit"><div class="downside-audit-head"><span>5つの下方向判定</span><strong>合計 −${Number(metrics.downsidePenalty || 0)}</strong></div>${rows.map(([name, stateText, points]) => `<div class="downside-row"><span>${esc(name)}</span><b>${esc(stateText)}</b><strong>${Number(points || 0)}</strong></div>`).join("")}</div>`;
 }
 
 function componentSection(item, timeframe) {
@@ -131,7 +149,7 @@ function componentSection(item, timeframe) {
     return `<div class="component"><span>${esc(name)}</span><strong>${score}<small>/${maximum}</small></strong><div class="component-bar"><b style="width:${Math.max(0, Math.min(100, score / maximum * 100))}%"></b></div></div>`;
   }).join("");
   const details = Object.entries(frame.details).map(([name, score]) => `<tr><td>${esc(name)}</td><td>${score}</td></tr>`).join("");
-  return `<div class="component-grid">${cards}</div><details class="details-disclosure"><summary>細かい配点を表示</summary><table class="fine-table"><thead><tr><th>判定項目</th><th>点数</th></tr></thead><tbody>${details}</tbody></table></details>`;
+  return `<div class="component-grid">${cards}</div>${downsideDiagnostics(frame)}<details class="details-disclosure"><summary>すべての細かい配点を表示</summary><table class="fine-table"><thead><tr><th>判定項目</th><th>点数</th></tr></thead><tbody>${details}</tbody></table></details>`;
 }
 
 function auditSection(item) {

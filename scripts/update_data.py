@@ -225,7 +225,7 @@ def main():
     top20 = [item["id"] for item in ranked[:20]]
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "methodologyVersion": "us-equity-discipline-v2",
+        "methodologyVersion": "us-equity-discipline-v3",
         "dataSource": "Yahoo Finance chart API（最新完成日足）",
         "counts": {
             "requestedStocks": len(stocks),

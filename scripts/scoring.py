@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""US Equity Discipline scoring model (methodology revision 2)."""
+"""US Equity Discipline scoring model (methodology revision 3)."""
 
 from __future__ import annotations
 
