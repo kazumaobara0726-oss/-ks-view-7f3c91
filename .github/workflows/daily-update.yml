@@ -49,6 +49,10 @@ jobs:
           assert len(data['sectors']) == 15
           print(data['counts'])
           PY
+      - name: Enable GitHub Pages for Actions
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Commit refreshed data
         run: |
           git config user.name "github-actions[bot]"
@@ -62,15 +66,12 @@ jobs:
     if: always() && (needs.update-data.result == 'success' || needs.update-data.result == 'skipped')
     runs-on: ubuntu-latest
     environment:
-      name: github-pages
+      name: pages-live
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
