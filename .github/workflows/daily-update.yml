@@ -12,12 +12,10 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: daily-market-data
+  cancel-in-progress: false
 
 jobs:
   update-data:
@@ -49,10 +47,6 @@ jobs:
           assert len(data['sectors']) == 15
           print(data['counts'])
           PY
-      - name: Enable GitHub Pages for Actions
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - name: Commit refreshed data
         run: |
           git config user.name "github-actions[bot]"
@@ -60,21 +54,3 @@ jobs:
           git add data.json sector_cache.json
           git diff --cached --quiet || git commit -m "Daily discipline score update"
           git push
-
-  deploy:
-    needs: [update-data]
-    if: always() && (needs.update-data.result == 'success' || needs.update-data.result == 'skipped')
-    runs-on: ubuntu-latest
-    environment:
-      name: pages-live
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
