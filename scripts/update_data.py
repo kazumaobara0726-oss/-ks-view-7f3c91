@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from market_data import fetch_chart_with_prehistory, fetch_profile, merge_volume, resample  # noqa: E402
-from scoring import compact_chart, moving_average, score_asset  # noqa: E402
+from scoring import DAILY_WEIGHT, WEEKLY_WEIGHT, compact_chart, moving_average, score_asset  # noqa: E402
 
 
 HISTORY_LOOKBACK_BARS = 1000
@@ -266,7 +266,7 @@ def score_history(asset_bars, sector_bars, market_bars, *, single_level=False, p
 
         components = []
         for name in ("直線上昇・高値圏上昇", "出来高の質", "下方向ボラティリティ・下落速度", "ATH位置・移動平均線構造"):
-            components.append(round((daily["components"][name] + weekly["components"][name]) / 2, 1))
+            components.append(round(daily["components"][name] * DAILY_WEIGHT + weekly["components"][name] * WEEKLY_WEIGHT, 1))
         random_daily = score["diagnostics"]["randomDaily"]
         row = [
             target_date,
@@ -423,7 +423,7 @@ def main():
     top20 = [item["id"] for item in ranked[:20]]
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "methodologyVersion": "us-equity-trend-score-v6-candles",
+        "methodologyVersion": "us-equity-trend-score-v7-daily80",
         "dataSource": "Yahoo Finance chart API（最新完成日足）",
         "historySchema": HISTORY_SCHEMA,
         "historyEvents": {

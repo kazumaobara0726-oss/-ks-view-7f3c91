@@ -12,6 +12,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from market_data import resample  # noqa: E402
 from scoring import (  # noqa: E402
+    DAILY_WEIGHT,
+    WEEKLY_WEIGHT,
     downside_expansion_penalty,
     five_day_speed_penalty,
     large_down_frequency_penalty,
@@ -124,6 +126,21 @@ class ScoringTests(unittest.TestCase):
         self.assertLessEqual(len(result["timeframes"]["daily"]["chart"]), 90)
         self.assertLessEqual(len(result["timeframes"]["weekly"]["chart"]), 70)
         self.assertNotIn("monthly", result["timeframes"])
+
+    def test_daily_weekly_allocation_is_eighty_twenty(self):
+        result = score_asset(
+            synthetic_daily(1100, growth=0.0009),
+            synthetic_daily(1100, growth=0.0006),
+            synthetic_daily(1100, growth=0.0004),
+        )
+        expected = (
+            result["timeframes"]["daily"]["score"] * DAILY_WEIGHT
+            + result["timeframes"]["weekly"]["score"] * WEEKLY_WEIGHT
+            + result["monthlyBonus"]["score"]
+        )
+        self.assertEqual(DAILY_WEIGHT, 0.8)
+        self.assertEqual(WEEKLY_WEIGHT, 0.2)
+        self.assertEqual(result["baseScore"], round(expected, 1))
 
     def test_revised_four_component_allocation(self):
         result = score_asset(
@@ -257,6 +274,14 @@ class ScoringTests(unittest.TestCase):
         self.assertEqual(history[-1][0], asset[-1]["date"])
         self.assertEqual(history[-1][1], current["score"])
         self.assertEqual(history[-1][2], current["baseScore"])
+        component_names = ("直線上昇・高値圏上昇", "出来高の質", "下方向ボラティリティ・下落速度", "ATH位置・移動平均線構造")
+        for offset, name in enumerate(component_names, start=7):
+            expected = round(
+                current["timeframes"]["daily"]["components"][name] * DAILY_WEIGHT
+                + current["timeframes"]["weekly"]["components"][name] * WEEKLY_WEIGHT,
+                1,
+            )
+            self.assertEqual(history[-1][offset], expected)
         self.assertEqual(HISTORY_SCHEMA[-4:], ["open", "high", "low", "priceVolume"])
         self.assertEqual(history[-1][20], round(asset[-1]["open"], 4))
         self.assertEqual(history[-1][21], round(asset[-1]["high"], 4))

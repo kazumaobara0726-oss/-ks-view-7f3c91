@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""US Equity Trend Score model (methodology revision 6)."""
+"""US Equity Trend Score model (methodology revision 7)."""
 
 from __future__ import annotations
 
@@ -8,6 +8,10 @@ from datetime import date, timedelta
 from statistics import mean, median
 
 from market_data import resample
+
+
+DAILY_WEIGHT = 0.8
+WEEKLY_WEIGHT = 0.2
 
 
 def avg(values, default=0.0):
@@ -1360,7 +1364,7 @@ def score_asset(
     bubble, bubble_metrics = bubble_state(daily, weekly)
     bubble_cap, bubble_collapse = bubble_collapse_cap(daily, bubble)
     healthy = healthy_pullback(weekly, week["stockRsSeries"])
-    base = day["score"] * 0.5 + week["score"] * 0.5 + month_bonus
+    base = day["score"] * DAILY_WEIGHT + week["score"] * WEEKLY_WEIGHT + month_bonus
     after_penalties = base - three_penalty - breakdown_penalty
     caps = {
         "順張り崩れ上限": breakdown_cap,

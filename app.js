@@ -19,6 +19,8 @@ const trendText = (value) => String(value ?? "")
   .replaceAll("規律的上昇が終了", "順張り上昇が終了")
   .replaceAll("規律維持", "順張り維持");
 const maxima = { "直線上昇・高値圏上昇": 35, "出来高の質": 30, "下方向ボラティリティ・下落速度": 25, "ATH位置・移動平均線構造": 10 };
+const DAILY_WEIGHT = 0.8;
+const WEEKLY_WEIGHT = 0.2;
 
 const H = {
   DATE: 0, FINAL: 1, BASE: 2, AFTER: 3, DAILY: 4, WEEKLY: 5, MONTHLY: 6,
@@ -64,6 +66,11 @@ function formatPrice(value, currency = "") {
 function signed(value, digits = 0) {
   const number = Number(value || 0);
   return `${number > 0 ? "+" : ""}${number.toFixed(digits)}`;
+}
+
+function weightedScore(value, weight) {
+  const result = Number(value || 0) * weight;
+  return Number.isInteger(result) ? String(result) : result.toFixed(1);
 }
 
 function shortDate(value) {
@@ -360,7 +367,7 @@ function historyTooltipHtml(item, row) {
   const cap = row[H.CAP] == null ? "なし" : row[H.CAP];
   return `<div class="history-tooltip-head"><div><span>${shortDate(row[H.DATE])}</span><strong class="${scoreClass(row[H.FINAL])}">${row[H.FINAL]}<small>/110</small></strong></div><div><span>前回比</span><strong class="${change >= 0 ? "positive" : "negative"}">${signed(change)}</strong></div><div><span>状態</span><strong>${esc(scoreBand(row[H.FINAL]))}</strong></div></div>
     <div class="history-tooltip-grid">
-      <div><span>日足</span><strong>${row[H.DAILY]}/100</strong></div><div><span>週足</span><strong>${row[H.WEEKLY]}/100</strong></div><div><span>月足ボーナス</span><strong>+${row[H.MONTHLY]}</strong></div><div><span>適用上限</span><strong>${cap}</strong></div>
+      <div><span>日足寄与（80％）</span><strong>${weightedScore(row[H.DAILY], DAILY_WEIGHT)}/80</strong></div><div><span>週足寄与（20％）</span><strong>${weightedScore(row[H.WEEKLY], WEEKLY_WEIGHT)}/20</strong></div><div><span>月足ボーナス</span><strong>+${row[H.MONTHLY]}/10</strong></div><div><span>適用上限</span><strong>${cap}</strong></div>
       <div><span>直線上昇</span><strong>${row[H.LINEAR]}/35</strong></div><div><span>出来高</span><strong>${row[H.VOLUME]}/30</strong></div><div><span>下方向ボラ</span><strong>${row[H.DOWNSIDE]}/25</strong></div><div><span>ATH構造</span><strong>${row[H.ATH]}/10</strong></div>
       <div><span>急騰後補正</span><strong>日 ${signed(row[H.POST_DAY])} / 週 ${signed(row[H.POST_WEEK])}</strong></div><div><span>減点・上限前</span><strong>${row[H.BASE]}</strong></div><div><span>減点後計算値</span><strong>${row[H.AFTER]}</strong></div><div><span>最終値</span><strong>${row[H.FINAL]}</strong></div>
     </div>${events.length ? `<div class="history-events"><strong>この日の重要な変化</strong>${events.map((event) => `<span>● ${esc(event)}</span>`).join("")}</div>` : `<div class="history-events quiet"><span>この日は新しい状態変化マーカーなし</span></div>`}`;
@@ -424,11 +431,11 @@ function componentSection(item, timeframe) {
 
 function auditSection(item) {
   const penalties = item.penalties;
-  const coreScore = (item.timeframes.daily.score * 0.5 + item.timeframes.weekly.score * 0.5).toFixed(1);
+  const coreScore = (item.timeframes.daily.score * DAILY_WEIGHT + item.timeframes.weekly.score * WEEKLY_WEIGHT).toFixed(1);
   const caps = Object.entries(item.caps).filter(([, value]) => value != null);
   const capRows = caps.length ? caps.map(([name, value]) => `<div class="audit-row"><span>${esc(trendText(name))}</span><strong>${value}</strong></div>`).join("") : `<div class="audit-row"><span>適用上限</span><strong>なし（110）</strong></div>`;
   const breakdownRows = Object.entries(penalties.breakdown.parts || {}).map(([name, value]) => `<tr><td>${esc(name)}</td><td>${esc(trendText(value.state))}</td><td>${value.points}</td></tr>`).join("");
-  return `<div class="audit-grid"><div class="audit-card"><h4>加点・減点</h4><div class="audit-row"><span>日足50％＋週足50％</span><strong>${coreScore}</strong></div><div class="audit-row"><span>月足構造ボーナス</span><strong>+${item.monthlyBonus.score}</strong></div><div class="audit-row"><span>3年下落減点</span><strong>−${penalties.threeYear.points}</strong></div><div class="audit-row"><span>順張り崩れ減点</span><strong>−${penalties.breakdown.points}</strong></div><div class="audit-row"><span>上限適用前</span><strong>${item.afterPenalties}</strong></div></div><div class="audit-card"><h4>上限</h4>${capRows}<div class="audit-row"><span>最終適用上限</span><strong>${item.appliedCap === 110 ? "なし" : item.appliedCap}</strong></div><div class="audit-row"><span>健全な押し目保護</span><strong>${item.diagnostics.healthyPullback ? "適用" : "なし"}</strong></div></div></div><table class="fine-table"><thead><tr><th>順張り崩れ項目</th><th>状態</th><th>点</th></tr></thead><tbody>${breakdownRows}</tbody></table>`;
+  return `<div class="audit-grid"><div class="audit-card"><h4>加点・減点</h4><div class="audit-row"><span>日足80％＋週足20％</span><strong>${coreScore}</strong></div><div class="audit-row"><span>月足構造ボーナス</span><strong>+${item.monthlyBonus.score}</strong></div><div class="audit-row"><span>3年下落減点</span><strong>−${penalties.threeYear.points}</strong></div><div class="audit-row"><span>順張り崩れ減点</span><strong>−${penalties.breakdown.points}</strong></div><div class="audit-row"><span>上限適用前</span><strong>${item.afterPenalties}</strong></div></div><div class="audit-card"><h4>上限</h4>${capRows}<div class="audit-row"><span>最終適用上限</span><strong>${item.appliedCap === 110 ? "なし" : item.appliedCap}</strong></div><div class="audit-row"><span>健全な押し目保護</span><strong>${item.diagnostics.healthyPullback ? "適用" : "なし"}</strong></div></div></div><table class="fine-table"><thead><tr><th>順張り崩れ項目</th><th>状態</th><th>点</th></tr></thead><tbody>${breakdownRows}</tbody></table>`;
 }
 
 function renderDetail() {
@@ -442,7 +449,7 @@ function renderDetail() {
   }
   const frame = item.timeframes[state.timeframe];
   const warning = item.warning ? `<div class="metric-card warning-card"><span>警告・状態</span><strong>${esc(trendText(item.warning))}</strong></div>` : "";
-  $("#detail-panel").innerHTML = `${detailHeader(item)}<div class="score-hero"><div class="score-main"><span>TREND-FOLLOWING SCORE</span><strong class="${scoreClass(item.score)}">${item.score}</strong><small>/110</small></div><div class="score-context"><div class="metric-card"><span>日足</span><strong>${item.timeframes.daily.score}/100</strong></div><div class="metric-card"><span>週足</span><strong>${item.timeframes.weekly.score}/100</strong></div><div class="metric-card"><span>月足構造ボーナス</span><strong>+${item.monthlyBonus.score}/10</strong></div><div class="metric-card"><span>適用上限</span><strong>${item.appliedCap === 110 ? "なし" : item.appliedCap}</strong></div><div class="metric-card verdict-card"><span>判定</span><strong>${esc(trendText(item.verdict))}</strong></div>${warning}</div></div>
+  $("#detail-panel").innerHTML = `${detailHeader(item)}<div class="score-hero"><div class="score-main"><span>TREND-FOLLOWING SCORE</span><strong class="${scoreClass(item.score)}">${item.score}</strong><small>/110</small></div><div class="score-context"><div class="metric-card"><span>日足寄与（80％）</span><strong>${weightedScore(item.timeframes.daily.score, DAILY_WEIGHT)}/80</strong></div><div class="metric-card"><span>週足寄与（20％）</span><strong>${weightedScore(item.timeframes.weekly.score, WEEKLY_WEIGHT)}/20</strong></div><div class="metric-card"><span>月足構造ボーナス</span><strong>+${item.monthlyBonus.score}/10</strong></div><div class="metric-card"><span>適用上限</span><strong>${item.appliedCap === 110 ? "なし" : item.appliedCap}</strong></div><div class="metric-card verdict-card"><span>判定</span><strong>${esc(trendText(item.verdict))}</strong></div>${warning}</div></div>
     ${historySection(item)}
     <div class="section"><div class="section-head"><h3>${state.timeframe === "daily" ? "日足" : "週足"}の100点内訳</h3><div class="section-tools"><span class="count-pill">${frame.score}/100</span>${timeframeButtons()}</div></div>${componentSection(item, state.timeframe)}</div>
     <div class="section"><details class="score-audit-disclosure"><summary>減点・上限の監査を表示（崩れ点 ${item.penalties.breakdown.breakdownPoints}/20）</summary><div class="audit-disclosure-body">${auditSection(item)}</div></details></div>`;

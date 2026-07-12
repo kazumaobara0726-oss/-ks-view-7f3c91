@@ -9,7 +9,7 @@
   <meta name="bingbot" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
   <meta name="referrer" content="no-referrer">
   <title>US Equity Trend Score | 米国株 順張りスコア</title>
-  <link rel="stylesheet" href="./styles.css?v=6">
+  <link rel="stylesheet" href="./styles.css?v=7">
 </head>
 <body class="gate-locked">
   <div class="entry-gate" id="entry-gate" role="dialog" aria-modal="true" aria-labelledby="entry-title" aria-describedby="entry-description">
@@ -66,7 +66,7 @@
       <div><span>データ基準</span><strong>最新完成足</strong></div>
     </section>
 
-    <p class="notice"><strong>TREND-FOLLOWING MODEL V6</strong> 最新スコアに加え、未来データを使わず再計算した順張りスコアの推移を表示します。6か月を標準に1か月〜3年を切り替えられます。分析・学習補助用の計算モデルであり、売買推奨ではありません。</p>
+    <p class="notice"><strong>TREND-FOLLOWING MODEL V7</strong> 日足80％＋週足20％＋月足ボーナス最大10点で計算し、未来データを使わず再計算した順張りスコアの推移を表示します。6か月を標準に1か月〜3年を切り替えられます。分析・学習補助用の計算モデルであり、売買推奨ではありません。</p>
 
     <div class="workspace">
       <section class="list-panel panel">
@@ -89,11 +89,11 @@
   <dialog id="method-dialog" class="method-dialog">
     <form method="dialog" class="dialog-card">
       <div class="dialog-head">
-        <div><p class="eyebrow">TREND-FOLLOWING MODEL V6</p><h2>採点・推移表示</h2></div>
+        <div><p class="eyebrow">TREND-FOLLOWING MODEL V7</p><h2>採点・推移表示</h2></div>
         <button class="dialog-close" value="close" aria-label="閉じる">×</button>
       </div>
       <div class="method-grid">
-        <section><h3>全体構造</h3><p>日足100点×50％＋週足100点×50％＋月足構造ボーナス最大10点。日足・週足は「直線上昇35・出来高30・下方向25・ATH/移動平均線10」です。3年下落・順張り崩れを減点し、該当する上限のうち最も低い値を適用します。</p></section>
+        <section><h3>全体構造</h3><p>日足100点×80％＋週足100点×20％＋月足構造ボーナス最大10点。日足・週足は「直線上昇35・出来高30・下方向25・ATH/移動平均線10」です。3年下落・順張り崩れを減点し、該当する上限のうち最も低い値を適用します。</p></section>
         <section><h3>直線上昇・高値圏上昇 35点</h3><ul><li>直近20期間の直線適合度 9</li><li>直近60期間の直線適合度 6</li><li>方向効率 6</li><li>上昇速度の安定性 5</li><li>高値圏での緩やかな上昇 5</li><li>押し目の浅さ・回復力 4</li></ul><p>基本点に急騰後補正を加え、最終点を0〜35点に制限します。</p></section>
         <section><h3>出来高の質 30点</h3><ul><li>上昇足と下落足の出来高比 9</li><li>出来高の継続性 8</li><li>ブレイク時の出来高 6</li><li>下落時の出来高 7</li></ul></section>
         <section><h3>下方向25点</h3><ul><li>下方向ボラティリティ拡大 最大−7</li><li>5日以内の下落速度 最大−7</li><li>大幅下落日の頻度 最大−5</li><li>急落後の売り継続 最大−3</li><li>日中値幅・終値位置 最大−3</li></ul><p>5項目のペナルティ合計を25点から差し引きます。</p></section>
@@ -115,6 +115,6 @@
     <span>検索除外: noindex / robots.txt</span>
   </footer>
   </div>
-  <script src="./app.js?v=6" defer></script>
+  <script src="./app.js?v=7" defer></script>
 </body>
 </html>
