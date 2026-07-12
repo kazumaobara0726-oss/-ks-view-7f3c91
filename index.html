@@ -8,18 +8,36 @@
   <meta name="googlebot" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
   <meta name="bingbot" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
   <meta name="referrer" content="no-referrer">
-  <title>US Equity Discipline | 米国株 規律性スコア</title>
-  <link rel="stylesheet" href="./styles.css?v=5-white">
+  <title>US Equity Trend Score | 米国株 順張りスコア</title>
+  <link rel="stylesheet" href="./styles.css?v=6">
 </head>
-<body>
+<body class="gate-locked">
+  <div class="entry-gate" id="entry-gate" role="dialog" aria-modal="true" aria-labelledby="entry-title" aria-describedby="entry-description">
+    <section class="entry-card">
+      <p class="entry-kicker">IMPORTANT NOTICE</p>
+      <h1 id="entry-title">順張りスコアを利用する前に</h1>
+      <div class="entry-copy" id="entry-description">
+        <p><strong>このツールは、実際の売買を推奨・指示するものではありません。</strong>売買判断とその結果は利用者自身の責任であり、元本割れを含む損失が生じる可能性があります。</p>
+        <section>
+          <h2>モデルの前提</h2>
+          <p>本モデルは「順張り」を土台にしています。順張りでは、利益となる取引回数が損失となる取引回数より少ない、低勝率の結果になり得ます。</p>
+          <p>一方で、1回の損失を小さく限定し、1回の利益をその数倍まで伸ばす「損小利大」を想定しています。適切な条件で損失を早期に限定できる場合に、理論上の期待値が高くなり得るという考え方で設計しています。</p>
+        </section>
+        <p class="entry-caution">順張りスコアは利益や期待値を保証せず、売買時期・損切り時期・金額も指示しません。表示結果は分析・学習補助として利用してください。</p>
+      </div>
+      <button class="entry-confirm" id="entry-confirm" type="button">確認済み — 順張りスコアを開く</button>
+    </section>
+  </div>
+
+  <div id="app-shell" inert aria-hidden="true">
   <header class="site-header">
     <div class="header-inner">
       <div class="brand-row">
-        <span class="brand-mark" aria-hidden="true">ED</span>
+        <span class="brand-mark" aria-hidden="true">TS</span>
         <div class="brand-copy">
           <span class="brand-kicker">US MARKET INTELLIGENCE</span>
-          <strong class="brand-name">US Equity Discipline</strong>
-          <span class="brand-sub">米国株の規律性を110点で可視化</span>
+          <strong class="brand-name">US Equity Trend Score</strong>
+          <span class="brand-sub">米国株の順張り状態を110点で可視化</span>
         </div>
         <div class="header-actions">
           <button class="plain-button" id="method-button" type="button">採点方法</button>
@@ -48,14 +66,14 @@
       <div><span>データ基準</span><strong>最新完成足</strong></div>
     </section>
 
-    <p class="notice"><strong>DISCIPLINE MODEL V5</strong> 最新スコアに加え、未来データを使わず再計算した規律可能性の推移を表示します。6か月を標準に1か月〜3年を切り替えられます。分析・学習補助用の計算モデルであり、売買推奨ではありません。</p>
+    <p class="notice"><strong>TREND-FOLLOWING MODEL V6</strong> 最新スコアに加え、未来データを使わず再計算した順張りスコアの推移を表示します。6か月を標準に1か月〜3年を切り替えられます。分析・学習補助用の計算モデルであり、売買推奨ではありません。</p>
 
     <div class="workspace">
       <section class="list-panel panel">
         <div class="panel-heading">
           <div>
             <p class="eyebrow" id="list-eyebrow">RANKING</p>
-            <h1 id="list-title">規律可能性 上位20銘柄</h1>
+            <h1 id="list-title">順張りスコア 上位20銘柄</h1>
           </div>
           <span class="count-pill" id="list-count">—</span>
         </div>
@@ -71,19 +89,19 @@
   <dialog id="method-dialog" class="method-dialog">
     <form method="dialog" class="dialog-card">
       <div class="dialog-head">
-        <div><p class="eyebrow">DISCIPLINE MODEL V5</p><h2>採点・推移表示</h2></div>
+        <div><p class="eyebrow">TREND-FOLLOWING MODEL V6</p><h2>採点・推移表示</h2></div>
         <button class="dialog-close" value="close" aria-label="閉じる">×</button>
       </div>
       <div class="method-grid">
-        <section><h3>全体構造</h3><p>日足100点×50％＋週足100点×50％＋月足構造ボーナス最大10点。日足・週足は「直線上昇35・出来高30・下方向25・ATH/移動平均線10」です。3年下落・規律崩れを減点し、該当する上限のうち最も低い値を適用します。</p></section>
+        <section><h3>全体構造</h3><p>日足100点×50％＋週足100点×50％＋月足構造ボーナス最大10点。日足・週足は「直線上昇35・出来高30・下方向25・ATH/移動平均線10」です。3年下落・順張り崩れを減点し、該当する上限のうち最も低い値を適用します。</p></section>
         <section><h3>直線上昇・高値圏上昇 35点</h3><ul><li>直近20期間の直線適合度 9</li><li>直近60期間の直線適合度 6</li><li>方向効率 6</li><li>上昇速度の安定性 5</li><li>高値圏での緩やかな上昇 5</li><li>押し目の浅さ・回復力 4</li></ul><p>基本点に急騰後補正を加え、最終点を0〜35点に制限します。</p></section>
         <section><h3>出来高の質 30点</h3><ul><li>上昇足と下落足の出来高比 9</li><li>出来高の継続性 8</li><li>ブレイク時の出来高 6</li><li>下落時の出来高 7</li></ul></section>
         <section><h3>下方向25点</h3><ul><li>下方向ボラティリティ拡大 最大−7</li><li>5日以内の下落速度 最大−7</li><li>大幅下落日の頻度 最大−5</li><li>急落後の売り継続 最大−3</li><li>日中値幅・終値位置 最大−3</li></ul><p>5項目のペナルティ合計を25点から差し引きます。</p></section>
         <section><h3>ATH位置・移動平均線構造 10点</h3><ul><li>ATHからの位置 4</li><li>株価と移動平均線の位置 2</li><li>移動平均線の並び 2</li><li>移動平均線の方向 2</li></ul></section>
         <section><h3>急騰の定義と補正</h3><p>直近20期間で、安値から高値まで4ATR以上、または上昇率12％以上なら急騰後を判定します。下落継続・反発未確認は−2〜−5、高値圏の緩やかな上昇は＋2〜＋4、方向不明は0です。</p></section>
         <section><h3>反発確認・二重減点防止</h3><p>5期間傾き、下落幅の50％超回復、戻り高値上抜け、短期線回復、出来高を伴う陽線のうち2つ以上を、2期間以上の値動きで確認します。急騰後減点は最大−5点で、単独の大陰線だけでは大きく重ねて減点しません。</p></section>
-        <section><h3>状態別の減点・上限</h3><p>月足ボーナス、規律崩れ、短期ランダム、バブル的急騰・崩壊、3年下落条件を別判定します。各画面では計算根拠を監査でき、結果は売買の指示ではありません。</p></section>
-        <section><h3>スコア推移</h3><p>縦軸は常に0〜110点。実線は最終スコア、破線は減点・上限適用前です。背景の点数帯と状態変化マーカーで、規律の高さ・方向・急変・上限発動を確認できます。</p></section>
+        <section><h3>状態別の減点・上限</h3><p>月足ボーナス、順張り崩れ、短期ランダム、バブル的急騰・崩壊、3年下落条件を別判定します。各画面では計算根拠を監査でき、結果は売買の指示ではありません。</p></section>
+        <section><h3>スコア推移</h3><p>縦軸は常に0〜110点。実線は最終スコア、破線は減点・上限適用前です。背景の点数帯と状態変化マーカーで、順張り状態の高さ・方向・急変・上限発動を確認できます。株価は折れ線ではなくローソク足と出来高で表示します。</p></section>
         <section><h3>期間とデータ密度</h3><p>標準は6か月。1か月・3か月・6か月・1年は毎営業日、3年は各週の最終営業日を表示します。一覧には直近60営業日のミニ折れ線を表示します。</p></section>
         <section><h3>過去時点の再計算</h3><p>各日のスコアは、その日までに判明していた価格・出来高・移動平均線・ATH・反発だけで計算します。未来の値動きは参照しません。</p></section>
         <section><h3>詳細は折りたたみ</h3><p>最初は主要4領域のみを表示します。細かい配点、急騰後補正、下方向判定、減点・上限の監査は、必要なときだけ開いて確認できます。</p></section>
@@ -96,6 +114,7 @@
     <span>データ: Yahoo Financeの完成日足</span>
     <span>検索除外: noindex / robots.txt</span>
   </footer>
-  <script src="./app.js?v=5" defer></script>
+  </div>
+  <script src="./app.js?v=6" defer></script>
 </body>
 </html>

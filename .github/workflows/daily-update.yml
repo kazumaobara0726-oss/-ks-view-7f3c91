@@ -53,13 +53,16 @@ jobs:
           assert len(data['top20']) <= 20
           assert len(data['indices']) == 7
           assert len(data['sectors']) == 15
-          assert data['methodologyVersion'] == 'us-equity-discipline-v5-score-history'
-          assert len(data['historySchema']) == 20
+          assert data['methodologyVersion'] == 'us-equity-trend-score-v6-candles'
+          assert len(data['historySchema']) == 24
           scored = [item for item in data['stocks'] if not item.get('pending')]
           assert all(item.get('scoreHistory') for item in scored)
           assert all(len(item['scoreHistory'][-1]) == len(data['historySchema']) for item in scored)
           assert all(item['scoreHistory'][-1][0] == item['asOf'] for item in scored)
           assert all(item['scoreHistory'][-1][1] == item['score'] for item in scored)
+          assert all(item['scoreHistory'][-1][20] <= item['scoreHistory'][-1][21] for item in scored)
+          assert all(item['scoreHistory'][-1][22] <= item['scoreHistory'][-1][21] for item in scored)
+          assert all(item['scoreHistory'][-1][23] >= 0 for item in scored)
           print(data['counts'])
           PY
       - name: Commit refreshed data
@@ -67,5 +70,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data.json sector_cache.json
-          git diff --cached --quiet || git commit -m "Daily discipline score update"
+          git diff --cached --quiet || git commit -m "Daily trend score update"
           git push

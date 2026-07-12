@@ -257,6 +257,11 @@ class ScoringTests(unittest.TestCase):
         self.assertEqual(history[-1][0], asset[-1]["date"])
         self.assertEqual(history[-1][1], current["score"])
         self.assertEqual(history[-1][2], current["baseScore"])
+        self.assertEqual(HISTORY_SCHEMA[-4:], ["open", "high", "low", "priceVolume"])
+        self.assertEqual(history[-1][20], round(asset[-1]["open"], 4))
+        self.assertEqual(history[-1][21], round(asset[-1]["high"], 4))
+        self.assertEqual(history[-1][22], round(asset[-1]["low"], 4))
+        self.assertEqual(history[-1][23], int(asset[-1]["volume"]))
 
     def test_score_history_never_uses_future_bars(self):
         asset = synthetic_daily(430, growth=0.0008)

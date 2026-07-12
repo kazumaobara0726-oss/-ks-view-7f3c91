@@ -10,12 +10,21 @@ const state = {
 
 const $ = (selector) => document.querySelector(selector);
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+const trendText = (value) => String(value ?? "")
+  .replaceAll("歴史的な高規律上昇", "歴史的な高順張り")
+  .replaceAll("規律崩れ・ランダム性が高い", "順張り不成立・ランダム性が高い")
+  .replaceAll("中長期高規律", "中長期順張り")
+  .replaceAll("高規律・ハイリスク", "強い順張り・ハイリスク")
+  .replaceAll("規律崩れ上限", "順張り崩れ上限")
+  .replaceAll("規律的上昇が終了", "順張り上昇が終了")
+  .replaceAll("規律維持", "順張り維持");
 const maxima = { "直線上昇・高値圏上昇": 35, "出来高の質": 30, "下方向ボラティリティ・下落速度": 25, "ATH位置・移動平均線構造": 10 };
 
 const H = {
   DATE: 0, FINAL: 1, BASE: 2, AFTER: 3, DAILY: 4, WEEKLY: 5, MONTHLY: 6,
   LINEAR: 7, VOLUME: 8, DOWNSIDE: 9, ATH: 10, POST_DAY: 11, POST_WEEK: 12,
   CAP: 13, FLAGS: 14, ER20: 15, ATR_EXPANSION: 16, CLOSE: 17, DOWNSIDE_EXPANSION: 18, BREAKDOWN: 19,
+  OPEN: 20, HIGH: 21, LOW: 22, PRICE_VOLUME: 23,
 };
 
 const EVENTS = {
@@ -29,13 +38,13 @@ const EVENTS = {
 };
 
 function scoreBand(score) {
-  if (score >= 100) return "歴史的な高規律";
+  if (score >= 100) return "歴史的な高順張り";
   if (score >= 90) return "極めて高い";
   if (score >= 80) return "高い";
   if (score >= 70) return "やや高い";
   if (score >= 55) return "変調・監視";
   if (score >= 40) return "低い";
-  return "規律崩れ・ランダム";
+  return "順張り不成立・ランダム";
 }
 
 function scoreClass(score) {
@@ -108,9 +117,9 @@ function historyChange(item, periods = 20) {
 function renderList() {
   const items = itemsForMode();
   const copy = {
-    stocks: ["RANKING", "規律可能性 上位20銘柄"],
+    stocks: ["RANKING", "順張りスコア 上位20銘柄"],
     indices: ["MARKET INDICES", "指定指数"],
-    sectors: ["SECTOR COMPARISON", "業種別 規律可能性"],
+    sectors: ["SECTOR COMPARISON", "業種別 順張りスコア"],
   }[state.mode];
   $("#list-eyebrow").textContent = copy[0];
   $("#list-title").textContent = copy[1];
@@ -192,18 +201,55 @@ function weekKey(value) {
   return date.toISOString().slice(0, 10);
 }
 
-function historyRowsForPeriod(item) {
+function rawHistoryRowsForPeriod(item) {
   const all = item.scoreHistory || [];
   if (!all.length) return [];
   const latest = Date.parse(`${all.at(-1)[H.DATE]}T00:00:00Z`);
   const days = { "1m": 31, "3m": 93, "6m": 186, "1y": 366, "3y": 365 * 3 + 15 }[state.historyPeriod] || 186;
-  let rows = all.filter((row) => Date.parse(`${row[H.DATE]}T00:00:00Z`) >= latest - days * 86400000);
+  return all.filter((row) => Date.parse(`${row[H.DATE]}T00:00:00Z`) >= latest - days * 86400000);
+}
+
+function historyRowsForPeriod(item) {
+  let rows = rawHistoryRowsForPeriod(item);
   if (state.historyPeriod === "3y") {
     const weekly = new Map();
     rows.forEach((row) => weekly.set(weekKey(row[H.DATE]), row));
     rows = [...weekly.values()];
   }
   return rows;
+}
+
+function historyPrice(row, index, fallback = H.CLOSE) {
+  const value = Number(row[index]);
+  if (Number.isFinite(value)) return value;
+  const fallbackValue = Number(row[fallback]);
+  return Number.isFinite(fallbackValue) ? fallbackValue : 0;
+}
+
+function priceRowsForPeriod(item) {
+  const rows = rawHistoryRowsForPeriod(item);
+  if (state.historyPeriod !== "3y") return rows;
+  const weekly = new Map();
+  rows.forEach((row) => {
+    const key = weekKey(row[H.DATE]);
+    const current = weekly.get(key);
+    if (!current) {
+      const first = [...row];
+      first[H.OPEN] = historyPrice(row, H.OPEN);
+      first[H.HIGH] = historyPrice(row, H.HIGH);
+      first[H.LOW] = historyPrice(row, H.LOW);
+      first[H.CLOSE] = historyPrice(row, H.CLOSE);
+      first[H.PRICE_VOLUME] = historyPrice(row, H.PRICE_VOLUME, H.PRICE_VOLUME);
+      weekly.set(key, first);
+      return;
+    }
+    current[H.DATE] = row[H.DATE];
+    current[H.HIGH] = Math.max(historyPrice(current, H.HIGH), historyPrice(row, H.HIGH));
+    current[H.LOW] = Math.min(historyPrice(current, H.LOW), historyPrice(row, H.LOW));
+    current[H.CLOSE] = historyPrice(row, H.CLOSE);
+    current[H.PRICE_VOLUME] = historyPrice(current, H.PRICE_VOLUME, H.PRICE_VOLUME) + historyPrice(row, H.PRICE_VOLUME, H.PRICE_VOLUME);
+  });
+  return [...weekly.values()];
 }
 
 function chartX(rows, width, left, right) {
@@ -214,22 +260,35 @@ function chartX(rows, width, left, right) {
 
 function priceHistorySvg(rows) {
   if (rows.length < 2) return `<div class="empty-state compact-empty">価格履歴を準備中です。</div>`;
-  const width = 900, height = 220, left = 54, right = 18, top = 16, bottom = 28;
-  const prices = rows.map((row) => Number(row[H.CLOSE]));
-  let min = Math.min(...prices), max = Math.max(...prices);
-  const pad = Math.max((max - min) * .10, max * .005);
+  const width = 900, height = 290, left = 54, right = 18, top = 16, priceBottom = 210, volumeTop = 226, volumeBottom = 260;
+  const highs = rows.map((row) => historyPrice(row, H.HIGH));
+  const lows = rows.map((row) => historyPrice(row, H.LOW));
+  let min = Math.min(...lows), max = Math.max(...highs);
+  const pad = Math.max((max - min) * .08, max * .004, .01);
   min -= pad; max += pad;
   const x = chartX(rows, width, left, right);
-  const y = (value) => top + (max - value) / Math.max(max - min, 1e-9) * (height - top - bottom);
+  const y = (value) => top + (max - value) / Math.max(max - min, 1e-9) * (priceBottom - top);
+  const volumeMax = Math.max(...rows.map((row) => historyPrice(row, H.PRICE_VOLUME, H.PRICE_VOLUME)), 1);
+  const candleWidth = Math.max(1.4, Math.min(8, (width - left - right) / Math.max(rows.length, 1) * .62));
   const grid = Array.from({ length: 4 }, (_, index) => {
     const value = max - (max - min) * index / 3;
     const py = y(value);
     return `<line x1="${left}" y1="${py}" x2="${width - right}" y2="${py}" stroke="#e7eaf0"/><text x="${left - 7}" y="${py + 4}" text-anchor="end" fill="#6c7787" font-size="10">${value.toLocaleString("ja-JP", { maximumFractionDigits: value >= 100 ? 1 : 2 })}</text>`;
   }).join("");
-  const points = rows.map((row) => `${x(row).toFixed(2)},${y(row[H.CLOSE]).toFixed(2)}`).join(" ");
-  const area = `${left},${height - bottom} ${points} ${width - right},${height - bottom}`;
+  const candles = rows.map((row) => {
+    const open = historyPrice(row, H.OPEN);
+    const high = historyPrice(row, H.HIGH);
+    const low = historyPrice(row, H.LOW);
+    const close = historyPrice(row, H.CLOSE);
+    const volume = historyPrice(row, H.PRICE_VOLUME, H.PRICE_VOLUME);
+    const color = close >= open ? "#16855b" : "#cf3b50";
+    const bodyTop = Math.min(y(open), y(close));
+    const bodyHeight = Math.max(1.4, Math.abs(y(open) - y(close)));
+    const volumeHeight = volume / volumeMax * (volumeBottom - volumeTop);
+    return `<g class="price-candle"><line x1="${x(row)}" y1="${y(high)}" x2="${x(row)}" y2="${y(low)}" stroke="${color}" vector-effect="non-scaling-stroke"/><rect x="${x(row) - candleWidth / 2}" y="${bodyTop}" width="${candleWidth}" height="${bodyHeight}" rx=".5" fill="${color}"/><rect class="price-volume" x="${x(row) - candleWidth / 2}" y="${volumeBottom - volumeHeight}" width="${candleWidth}" height="${volumeHeight}" fill="${color}" opacity=".22"/></g>`;
+  }).join("");
   const labels = [rows[0], rows[Math.floor((rows.length - 1) / 2)], rows.at(-1)].map((row) => `<text x="${x(row)}" y="${height - 7}" text-anchor="middle" fill="#6c7787" font-size="10">${shortDate(row[H.DATE])}</text>`).join("");
-  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="終値の推移">${grid}<polygon points="${area}" fill="rgba(40,107,214,.08)"/><polyline points="${points}" fill="none" stroke="#286bd6" stroke-width="2" vector-effect="non-scaling-stroke"/>${labels}</svg>`;
+  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="株価ローソク足チャート">${grid}<line x1="${left}" y1="${priceBottom + 8}" x2="${width - right}" y2="${priceBottom + 8}" stroke="#dfe4eb"/><text x="${left}" y="${volumeTop - 4}" fill="#6c7787" font-size="9">出来高</text>${candles}${labels}</svg>`;
 }
 
 function smoothedScores(rows, period = 5) {
@@ -272,7 +331,7 @@ function scoreHistorySvg(rows) {
   const hitWidth = (width - left - right) / Math.max(1, rows.length - 1);
   const hits = rows.map((row) => `<rect class="history-hit" data-history-date="${row[H.DATE]}" data-history-x="${x(row)}" data-history-y="${y(row[H.FINAL])}" x="${x(row) - hitWidth / 2}" y="${top}" width="${Math.max(hitWidth, 5)}" height="${height - top - bottom}" fill="transparent" tabindex="0" aria-label="${row[H.DATE]} スコア${row[H.FINAL]}"/>`).join("");
   const labels = [rows[0], rows[Math.floor((rows.length - 1) / 2)], rows.at(-1)].map((row) => `<text x="${x(row)}" y="${height - 8}" text-anchor="middle" fill="#667085" font-size="10">${shortDate(row[H.DATE])}</text>`).join("");
-  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="規律可能性スコアの推移">${bands}${ticks}<polyline points="${basePoints}" fill="none" stroke="#697586" stroke-width="1.4" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/><polyline points="${finalPoints}" fill="none" stroke="#174ea6" stroke-width="2.7" vector-effect="non-scaling-stroke"/>${state.smoothing ? `<polyline points="${smoothPoints}" fill="none" stroke="#d18b16" stroke-width="1.8" vector-effect="non-scaling-stroke"/>` : ""}${markers}${selectedPoint}${hits}${labels}</svg>`;
+  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="順張りスコアの推移">${bands}${ticks}<polyline points="${basePoints}" fill="none" stroke="#697586" stroke-width="1.4" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/><polyline points="${finalPoints}" fill="none" stroke="#174ea6" stroke-width="2.7" vector-effect="non-scaling-stroke"/>${state.smoothing ? `<polyline points="${smoothPoints}" fill="none" stroke="#d18b16" stroke-width="1.8" vector-effect="non-scaling-stroke"/>` : ""}${markers}${selectedPoint}${hits}${labels}</svg>`;
 }
 
 function historyPeriodButtons() {
@@ -284,7 +343,7 @@ function historyEventLabels(row, previous) {
   const labels = [];
   if (flags & EVENTS.DOWNSIDE) labels.push(`下方向ボラティリティ急拡大（${Number(row[H.DOWNSIDE_EXPANSION]).toFixed(2)}倍）`);
   if (flags & EVENTS.RANDOM) labels.push(`短期ランダム相場入り（ER20 ${Number(row[H.ER20]).toFixed(2)}・ATR比 ${Number(row[H.ATR_EXPANSION]).toFixed(2)}倍）`);
-  if (flags & EVENTS.BREAKDOWN) labels.push(`規律崩れ上限が発動（上限 ${row[H.CAP] ?? "—"}）`);
+  if (flags & EVENTS.BREAKDOWN) labels.push(`順張り崩れ上限が発動（上限 ${row[H.CAP] ?? "—"}）`);
   if (flags & EVENTS.BUBBLE) labels.push("バブル的急騰を検出");
   if (flags & EVENTS.POST_BEARISH) labels.push("急騰後の大陰線を検出");
   if (flags & EVENTS.MONTHLY) labels.push(`月足ボーナスが変化（${previous ? signed(Number(row[H.MONTHLY]) - Number(previous[H.MONTHLY])) : "—"}）`);
@@ -309,12 +368,13 @@ function historyTooltipHtml(item, row) {
 
 function historySection(item) {
   const rows = historyRowsForPeriod(item);
+  const priceRows = priceRowsForPeriod(item);
   if (!rows.length) return `<div class="section"><div class="empty-state compact-empty">スコア履歴は次回のデータ更新で表示されます。</div></div>`;
   if (!state.selectedHistoryDate || !rows.some((row) => row[H.DATE] === state.selectedHistoryDate)) state.selectedHistoryDate = rows.at(-1)[H.DATE];
   const selected = rows.find((row) => row[H.DATE] === state.selectedHistoryDate) || rows.at(-1);
-  return `<div class="section history-section"><div class="section-head history-head"><div><p class="eyebrow">SCORE HISTORY</p><h3>株価と規律可能性スコアの推移</h3></div>${historyPeriodButtons()}</div>
-    <div class="history-chart-title"><span>終値</span><small>スコアと同じ期間</small></div><div class="history-chart price-history">${priceHistorySvg(rows)}</div>
-    <div class="history-chart-title"><span>規律可能性（縦軸0〜110固定）</span><button type="button" id="smoothing-button" class="smoothing-button ${state.smoothing ? "active" : ""}">5日平均 ${state.smoothing ? "表示中" : "非表示"}</button></div>
+  return `<div class="section history-section"><div class="section-head history-head"><div><p class="eyebrow">SCORE HISTORY</p><h3>株価と順張りスコアの推移</h3></div>${historyPeriodButtons()}</div>
+    <div class="history-chart-title"><span>株価チャート（ローソク足）</span><small>同じ期間・3年表示は週足／下段は出来高</small></div><div class="history-chart price-history">${priceHistorySvg(priceRows)}</div>
+    <div class="history-chart-title"><span>順張りスコア（縦軸0〜110固定）</span><button type="button" id="smoothing-button" class="smoothing-button ${state.smoothing ? "active" : ""}">5日平均 ${state.smoothing ? "表示中" : "非表示"}</button></div>
     <div class="history-chart score-history">${scoreHistorySvg(rows)}</div>
     <div class="history-legend"><span><i class="line-solid"></i>最終スコア</span><span><i class="line-dashed"></i>減点・上限適用前</span>${state.smoothing ? `<span><i class="line-smooth"></i>5日平均</span>` : ""}<span><i class="marker-dot"></i>重要な状態変化</span></div>
     <div class="history-tooltip" id="history-tooltip">${historyTooltipHtml(item, selected)}</div></div>`;
@@ -366,9 +426,9 @@ function auditSection(item) {
   const penalties = item.penalties;
   const coreScore = (item.timeframes.daily.score * 0.5 + item.timeframes.weekly.score * 0.5).toFixed(1);
   const caps = Object.entries(item.caps).filter(([, value]) => value != null);
-  const capRows = caps.length ? caps.map(([name, value]) => `<div class="audit-row"><span>${esc(name)}</span><strong>${value}</strong></div>`).join("") : `<div class="audit-row"><span>適用上限</span><strong>なし（110）</strong></div>`;
-  const breakdownRows = Object.entries(penalties.breakdown.parts || {}).map(([name, value]) => `<tr><td>${esc(name)}</td><td>${esc(value.state)}</td><td>${value.points}</td></tr>`).join("");
-  return `<div class="audit-grid"><div class="audit-card"><h4>加点・減点</h4><div class="audit-row"><span>日足50％＋週足50％</span><strong>${coreScore}</strong></div><div class="audit-row"><span>月足構造ボーナス</span><strong>+${item.monthlyBonus.score}</strong></div><div class="audit-row"><span>3年下落減点</span><strong>−${penalties.threeYear.points}</strong></div><div class="audit-row"><span>規律崩れ減点</span><strong>−${penalties.breakdown.points}</strong></div><div class="audit-row"><span>上限適用前</span><strong>${item.afterPenalties}</strong></div></div><div class="audit-card"><h4>上限</h4>${capRows}<div class="audit-row"><span>最終適用上限</span><strong>${item.appliedCap === 110 ? "なし" : item.appliedCap}</strong></div><div class="audit-row"><span>健全な押し目保護</span><strong>${item.diagnostics.healthyPullback ? "適用" : "なし"}</strong></div></div></div><table class="fine-table"><thead><tr><th>規律崩れ項目</th><th>状態</th><th>点</th></tr></thead><tbody>${breakdownRows}</tbody></table>`;
+  const capRows = caps.length ? caps.map(([name, value]) => `<div class="audit-row"><span>${esc(trendText(name))}</span><strong>${value}</strong></div>`).join("") : `<div class="audit-row"><span>適用上限</span><strong>なし（110）</strong></div>`;
+  const breakdownRows = Object.entries(penalties.breakdown.parts || {}).map(([name, value]) => `<tr><td>${esc(name)}</td><td>${esc(trendText(value.state))}</td><td>${value.points}</td></tr>`).join("");
+  return `<div class="audit-grid"><div class="audit-card"><h4>加点・減点</h4><div class="audit-row"><span>日足50％＋週足50％</span><strong>${coreScore}</strong></div><div class="audit-row"><span>月足構造ボーナス</span><strong>+${item.monthlyBonus.score}</strong></div><div class="audit-row"><span>3年下落減点</span><strong>−${penalties.threeYear.points}</strong></div><div class="audit-row"><span>順張り崩れ減点</span><strong>−${penalties.breakdown.points}</strong></div><div class="audit-row"><span>上限適用前</span><strong>${item.afterPenalties}</strong></div></div><div class="audit-card"><h4>上限</h4>${capRows}<div class="audit-row"><span>最終適用上限</span><strong>${item.appliedCap === 110 ? "なし" : item.appliedCap}</strong></div><div class="audit-row"><span>健全な押し目保護</span><strong>${item.diagnostics.healthyPullback ? "適用" : "なし"}</strong></div></div></div><table class="fine-table"><thead><tr><th>順張り崩れ項目</th><th>状態</th><th>点</th></tr></thead><tbody>${breakdownRows}</tbody></table>`;
 }
 
 function renderDetail() {
@@ -381,8 +441,8 @@ function renderDetail() {
     return;
   }
   const frame = item.timeframes[state.timeframe];
-  const warning = item.warning ? `<div class="metric-card warning-card"><span>警告・状態</span><strong>${esc(item.warning)}</strong></div>` : "";
-  $("#detail-panel").innerHTML = `${detailHeader(item)}<div class="score-hero"><div class="score-main"><span>DISCIPLINE SCORE</span><strong class="${scoreClass(item.score)}">${item.score}</strong><small>/110</small></div><div class="score-context"><div class="metric-card"><span>日足</span><strong>${item.timeframes.daily.score}/100</strong></div><div class="metric-card"><span>週足</span><strong>${item.timeframes.weekly.score}/100</strong></div><div class="metric-card"><span>月足構造ボーナス</span><strong>+${item.monthlyBonus.score}/10</strong></div><div class="metric-card"><span>適用上限</span><strong>${item.appliedCap === 110 ? "なし" : item.appliedCap}</strong></div><div class="metric-card verdict-card"><span>判定</span><strong>${esc(item.verdict)}</strong></div>${warning}</div></div>
+  const warning = item.warning ? `<div class="metric-card warning-card"><span>警告・状態</span><strong>${esc(trendText(item.warning))}</strong></div>` : "";
+  $("#detail-panel").innerHTML = `${detailHeader(item)}<div class="score-hero"><div class="score-main"><span>TREND-FOLLOWING SCORE</span><strong class="${scoreClass(item.score)}">${item.score}</strong><small>/110</small></div><div class="score-context"><div class="metric-card"><span>日足</span><strong>${item.timeframes.daily.score}/100</strong></div><div class="metric-card"><span>週足</span><strong>${item.timeframes.weekly.score}/100</strong></div><div class="metric-card"><span>月足構造ボーナス</span><strong>+${item.monthlyBonus.score}/10</strong></div><div class="metric-card"><span>適用上限</span><strong>${item.appliedCap === 110 ? "なし" : item.appliedCap}</strong></div><div class="metric-card verdict-card"><span>判定</span><strong>${esc(trendText(item.verdict))}</strong></div>${warning}</div></div>
     ${historySection(item)}
     <div class="section"><div class="section-head"><h3>${state.timeframe === "daily" ? "日足" : "週足"}の100点内訳</h3><div class="section-tools"><span class="count-pill">${frame.score}/100</span>${timeframeButtons()}</div></div>${componentSection(item, state.timeframe)}</div>
     <div class="section"><details class="score-audit-disclosure"><summary>減点・上限の監査を表示（崩れ点 ${item.penalties.breakdown.breakdownPoints}/20）</summary><div class="audit-disclosure-body">${auditSection(item)}</div></details></div>`;
@@ -463,4 +523,16 @@ $("#share-button").addEventListener("click", () => {
   window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(location.href)}`, "_blank", "noopener,noreferrer");
 });
 
+function unlockEntryGate() {
+  const gate = $("#entry-gate");
+  const shell = $("#app-shell");
+  gate.hidden = true;
+  shell.removeAttribute("inert");
+  shell.removeAttribute("aria-hidden");
+  document.body.classList.remove("gate-locked");
+  $("#search-input")?.focus();
+}
+
+$("#entry-confirm").addEventListener("click", unlockEntryGate);
+$("#entry-confirm").focus();
 load();

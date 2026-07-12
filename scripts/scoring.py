@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""US Equity Discipline scoring model (methodology revision 4)."""
+"""US Equity Trend Score model (methodology revision 6)."""
 
 from __future__ import annotations
 
@@ -426,7 +426,7 @@ def linear_high_zone_score(bars, short_period, mid_period, long_period, historic
 
 def score_band(score):
     if score >= 100:
-        return "歴史的な高規律上昇"
+        return "歴史的な高順張り"
     if score >= 90:
         return "極めて高い"
     if score >= 80:
@@ -437,7 +437,7 @@ def score_band(score):
         return "変調・監視"
     if score >= 40:
         return "低い"
-    return "規律崩れ・ランダム性が高い"
+    return "順張り不成立・ランダム性が高い"
 
 
 def trend_score(bars, short_period, mid_period, long_period, structure_window):
@@ -1202,7 +1202,7 @@ def breakdown_points(daily, weekly, stock_rs_daily, sector_rs_daily, stock_rs_we
 
 def breakdown_adjustment(points):
     if points <= 3:
-        return 0, None, "規律維持"
+        return 0, None, "順張り維持"
     if points <= 6:
         return 5, 89, "軽度警戒"
     if points <= 9:
@@ -1210,7 +1210,7 @@ def breakdown_adjustment(points):
     if points <= 12:
         return 22, 69, "上昇構造が崩れ始めた"
     if points <= 15:
-        return 32, 59, "規律的上昇が終了"
+        return 32, 59, "順張り上昇が終了"
     return 42, 49, "構造的下降・乱高下"
 
 
@@ -1363,7 +1363,7 @@ def score_asset(
     base = day["score"] * 0.5 + week["score"] * 0.5 + month_bonus
     after_penalties = base - three_penalty - breakdown_penalty
     caps = {
-        "規律崩れ上限": breakdown_cap,
+        "順張り崩れ上限": breakdown_cap,
         "短期ランダム相場上限": random_cap_value,
         "長期下降上限": long_cap,
         "バブル崩壊上限": bubble_cap,
@@ -1372,10 +1372,10 @@ def score_asset(
     applied_cap = min(applicable) if applicable else 110
     final_score = int(round(max(0, min(after_penalties, applied_cap))))
     if bubble and bubble_cap is None:
-        verdict = "高規律・ハイリスク"
+        verdict = "強い順張り・ハイリスク"
         warning = "バブル的急騰"
     elif random_cap_value is not None:
-        verdict = "中長期高規律・短期乱高下" if week["score"] >= 55 else "日足・週足とも乱高下"
+        verdict = "中長期順張り・短期乱高下" if week["score"] >= 55 else "日足・週足とも乱高下"
         warning = "短期ランダム相場"
     else:
         verdict = score_band(final_score)

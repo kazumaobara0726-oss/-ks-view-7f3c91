@@ -25,6 +25,7 @@ HISTORY_SCHEMA = [
     "date", "finalScore", "baseScore", "afterPenalties", "dailyScore", "weeklyScore", "monthlyBonus",
     "linearScore", "volumeScore", "downsideScore", "athMaScore", "dailyPostSurge", "weeklyPostSurge",
     "appliedCap", "eventFlags", "er20", "atrExpansion", "close", "downsideExpansion", "breakdownPoints",
+    "open", "high", "low", "priceVolume",
 ]
 
 EVENT_DOWNSIDE_EXPANSION = 1
@@ -184,7 +185,7 @@ def history_state(score):
     return {
         "downside": NumberLike(daily_metrics.get("downsideExpansion")) >= 1.5,
         "random": int(random_daily.get("count") or 0) >= 3,
-        "breakdownCap": score["caps"].get("規律崩れ上限"),
+        "breakdownCap": score["caps"].get("順張り崩れ上限"),
         "bubble": int(score["diagnostics"]["bubble"].get("count") or 0) >= 3,
         "postBearish": bool(daily_metrics.get("surgeDetected")) and bool((daily_metrics.get("highZone") or {}).get("largeBearish")),
         "monthly": int(score["monthlyBonus"]["score"]),
@@ -214,8 +215,19 @@ def score_history(asset_bars, sector_bars, market_bars, *, single_level=False, p
     output = []
     previous_state = None
     previous_target_index = None
+    latest = date.fromisoformat(asset_bars[-1]["date"])
+    daily_cutoff = latest - timedelta(days=HISTORY_DAILY_DAYS)
     for index in targets:
         target_date = asset_bars[index]["date"]
+        target_day = date.fromisoformat(target_date)
+        if target_day >= daily_cutoff:
+            price_bar = asset_bars[index]
+        else:
+            target_week = target_day.isocalendar()[:2]
+            week_start = index
+            while week_start > 0 and date.fromisoformat(asset_bars[week_start - 1]["date"]).isocalendar()[:2] == target_week:
+                week_start -= 1
+            price_bar = resample(asset_bars[week_start : index + 1], "week")[-1]
         asset_slice = asset_bars[max(0, index + 1 - HISTORY_LOOKBACK_BARS) : index + 1]
         sector_slice = bars_through(sector_bars, sector_dates, target_date)
         market_slice = bars_through(market_bars, market_dates, target_date)
@@ -274,6 +286,10 @@ def score_history(asset_bars, sector_bars, market_bars, *, single_level=False, p
             round(asset_bars[index]["close"], 4),
             round(NumberLike(daily["metrics"].get("downsideExpansion")), 4),
             score["penalties"]["breakdown"]["breakdownPoints"],
+            round(price_bar["open"], 4),
+            round(price_bar["high"], 4),
+            round(price_bar["low"], 4),
+            int(price_bar.get("volume") or 0),
         ]
         output.append(row)
         previous_state = state
@@ -407,7 +423,7 @@ def main():
     top20 = [item["id"] for item in ranked[:20]]
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "methodologyVersion": "us-equity-discipline-v5-score-history",
+        "methodologyVersion": "us-equity-trend-score-v6-candles",
         "dataSource": "Yahoo Finance chart API（最新完成日足）",
         "historySchema": HISTORY_SCHEMA,
         "historyEvents": {
