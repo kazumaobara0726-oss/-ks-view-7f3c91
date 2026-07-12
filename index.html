@@ -9,7 +9,7 @@
   <meta name="bingbot" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
   <meta name="referrer" content="no-referrer">
   <title>US Equity Discipline | 米国株 規律性スコア</title>
-  <link rel="stylesheet" href="./styles.css?v=3">
+  <link rel="stylesheet" href="./styles.css?v=4">
 </head>
 <body>
   <header class="site-header">
@@ -48,7 +48,7 @@
       <div><span>データ基準</span><strong>最新完成足</strong></div>
     </section>
 
-    <p class="notice"><strong>DISCIPLINE MODEL V3</strong> 日足・週足を4領域100点で採点し、月足構造と状態別の減点・上限を反映します。月足チャートは表示しません。分析・学習補助用であり、売買推奨ではありません。</p>
+    <p class="notice"><strong>DISCIPLINE MODEL V4</strong> 日足・週足を4領域100点で採点し、直線上昇35点の中で急騰後の値動きを−5〜＋4点補正します。月足構造と状態別の減点・上限も反映します。分析・学習補助用の計算モデルであり、売買推奨ではありません。</p>
 
     <div class="workspace">
       <section class="list-panel panel">
@@ -71,16 +71,18 @@
   <dialog id="method-dialog" class="method-dialog">
     <form method="dialog" class="dialog-card">
       <div class="dialog-head">
-        <div><p class="eyebrow">DISCIPLINE MODEL V3</p><h2>採点方法</h2></div>
+        <div><p class="eyebrow">DISCIPLINE MODEL V4</p><h2>採点方法</h2></div>
         <button class="dialog-close" value="close" aria-label="閉じる">×</button>
       </div>
       <div class="method-grid">
-        <section><h3>全体構造</h3><p>日足100点×50％＋週足100点×50％＋月足構造ボーナス最大10点。3年下落・規律崩れを減点し、該当する上限のうち最も低い値を適用します。</p></section>
-        <section><h3>トレンド構造 25点</h3><ul><li>株価と移動平均線 6</li><li>移動平均線の並び 5</li><li>傾き 4</li><li>高値切り上げ 4</li><li>安値切り上げ 4</li><li>上昇の継続性・滑らかさ 2</li></ul></section>
+        <section><h3>全体構造</h3><p>日足100点×50％＋週足100点×50％＋月足構造ボーナス最大10点。日足・週足は「直線上昇35・出来高30・下方向25・ATH/移動平均線10」です。3年下落・規律崩れを減点し、該当する上限のうち最も低い値を適用します。</p></section>
+        <section><h3>直線上昇・高値圏上昇 35点</h3><ul><li>直近20期間の直線適合度 9</li><li>直近60期間の直線適合度 6</li><li>方向効率 6</li><li>上昇速度の安定性 5</li><li>高値圏での緩やかな上昇 5</li><li>押し目の浅さ・回復力 4</li></ul><p>基本点に急騰後補正を加え、最終点を0〜35点に制限します。</p></section>
         <section><h3>出来高の質 30点</h3><ul><li>上昇足と下落足の出来高比 9</li><li>出来高の継続性 8</li><li>ブレイク時の出来高 6</li><li>下落時の出来高 7</li></ul></section>
-        <section><h3>押し目の質 20点</h3><ul><li>直前上昇に対する押しの深さ 6</li><li>支持線・移動平均線の維持 5</li><li>押し目中の出来高 5</li><li>安値切り上げ・停止力 4</li></ul></section>
         <section><h3>下方向25点</h3><ul><li>下方向ボラティリティ拡大 最大−7</li><li>5日以内の下落速度 最大−7</li><li>大幅下落日の頻度 最大−5</li><li>急落後の売り継続 最大−3</li><li>日中値幅・終値位置 最大−3</li></ul><p>5項目のペナルティ合計を25点から差し引きます。</p></section>
-        <section><h3>状態別の減点・上限</h3><p>月足ボーナス、規律崩れ、短期ランダム、バブル的急騰・崩壊、3年下落条件を別判定します。相対強度2項目は100点配分に含めません。</p></section>
+        <section><h3>ATH位置・移動平均線構造 10点</h3><ul><li>ATHからの位置 4</li><li>株価と移動平均線の位置 2</li><li>移動平均線の並び 2</li><li>移動平均線の方向 2</li></ul></section>
+        <section><h3>急騰の定義と補正</h3><p>直近20期間で、安値から高値まで4ATR以上、または上昇率12％以上なら急騰後を判定します。下落継続・反発未確認は−2〜−5、高値圏の緩やかな上昇は＋2〜＋4、方向不明は0です。</p></section>
+        <section><h3>反発確認・二重減点防止</h3><p>5期間傾き、下落幅の50％超回復、戻り高値上抜け、短期線回復、出来高を伴う陽線のうち2つ以上を、2期間以上の値動きで確認します。急騰後減点は最大−5点で、単独の大陰線だけでは大きく重ねて減点しません。</p></section>
+        <section><h3>状態別の減点・上限</h3><p>月足ボーナス、規律崩れ、短期ランダム、バブル的急騰・崩壊、3年下落条件を別判定します。各画面では計算根拠を監査でき、結果は売買の指示ではありません。</p></section>
       </div>
       <p class="method-note">各銘柄の詳細画面で、日足・週足の4領域、細かい配点、月足ボーナス、減点、規律崩れ点、適用上限を確認できます。</p>
     </form>
@@ -90,6 +92,6 @@
     <span>データ: Yahoo Financeの完成日足</span>
     <span>検索除外: noindex / robots.txt</span>
   </footer>
-  <script src="./app.js?v=3" defer></script>
+  <script src="./app.js?v=4" defer></script>
 </body>
 </html>

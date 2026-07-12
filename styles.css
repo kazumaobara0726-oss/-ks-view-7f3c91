@@ -147,6 +147,12 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 .downside-row span { color: var(--muted); }
 .downside-row b { min-width: 0; overflow: hidden; color: var(--ink); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .downside-row strong { color: var(--red); text-align: right; font-size: 10px; }
+.surge-audit .downside-audit-head strong.positive,
+.surge-audit .downside-row strong.positive { color: var(--green); }
+.surge-audit .downside-audit-head strong.negative,
+.surge-audit .downside-row strong.negative { color: var(--red); }
+.surge-audit .downside-audit-head strong.neutral,
+.surge-audit .downside-row strong.neutral { color: var(--muted); }
 
 .audit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .audit-card { padding: 0; border-top: 2px solid var(--line-strong); }

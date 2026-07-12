@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""US Equity Discipline scoring model (methodology revision 3)."""
+"""US Equity Discipline scoring model (methodology revision 4)."""
 
 from __future__ import annotations
 
@@ -51,6 +51,365 @@ def slope(values, lookback):
     if len(clean) < 2:
         return 0.0
     return (clean[-1] - clean[0]) / max(1, len(clean) - 1)
+
+
+def regression_metrics(values):
+    """Return the least-squares slope and R-squared for a numeric series."""
+    clean = [float(value) for value in values if value is not None and math.isfinite(float(value))]
+    if len(clean) < 2:
+        return 0.0, 0.0
+    x_average = (len(clean) - 1) / 2
+    y_average = avg(clean)
+    denominator = sum((index - x_average) ** 2 for index in range(len(clean)))
+    if not denominator:
+        return 0.0, 0.0
+    coefficient = sum((index - x_average) * (value - y_average) for index, value in enumerate(clean)) / denominator
+    intercept = y_average - coefficient * x_average
+    fitted = [intercept + coefficient * index for index in range(len(clean))]
+    total = sum((value - y_average) ** 2 for value in clean)
+    residual = sum((value - estimate) ** 2 for value, estimate in zip(clean, fitted))
+    r_squared = 1.0 if total <= 1e-18 else max(0.0, min(1.0, 1 - residual / total))
+    return coefficient, r_squared
+
+
+def positive_log_slope(bars, periods):
+    window = bars[-min(len(bars), periods) :]
+    values = [math.log(max(row["close"], 1e-9)) for row in window]
+    coefficient, _ = regression_metrics(values)
+    return coefficient
+
+
+def linear_fit_points(bars, periods, maximum):
+    window = bars[-min(len(bars), periods) :]
+    values = [math.log(max(row["close"], 1e-9)) for row in window]
+    coefficient, r_squared = regression_metrics(values)
+    rising = len(window) >= 2 and window[-1]["close"] > window[0]["close"] and coefficient > 0
+    if not rising:
+        points = 0
+    else:
+        thresholds = {
+            9: ((0.92, 9), (0.85, 8), (0.75, 7), (0.65, 6), (0.55, 5), (0.45, 4), (0.35, 3), (0.25, 2), (0.15, 1)),
+            6: ((0.88, 6), (0.76, 5), (0.62, 4), (0.48, 3), (0.34, 2), (0.20, 1)),
+        }[maximum]
+        points = next((score for threshold, score in thresholds if r_squared >= threshold), 0)
+    return points, {"rSquared": r_squared, "slope": coefficient, "periods": len(window)}
+
+
+def directional_efficiency_points(bars, periods=20):
+    window = bars[-min(len(bars), periods + 1) :]
+    closes = [row["close"] for row in window]
+    if len(closes) < 2:
+        return 0, 0.0
+    path = sum(abs(closes[index] - closes[index - 1]) for index in range(1, len(closes)))
+    efficiency = max(0.0, closes[-1] - closes[0]) / max(path, 1e-9)
+    thresholds = ((0.80, 6), (0.65, 5), (0.50, 4), (0.35, 3), (0.22, 2), (0.10, 1))
+    return next((score for threshold, score in thresholds if efficiency >= threshold), 0), efficiency
+
+
+def ascent_stability_points(bars, periods=20):
+    window = bars[-min(len(bars), periods + 1) :]
+    if len(window) < 7 or window[-1]["close"] <= window[0]["close"]:
+        return 0, {"positiveRatio": 0.0, "variation": None}
+    step = max(2, min(5, (len(window) - 1) // 4))
+    speeds = []
+    for end in range(step, len(window), step):
+        start = end - step
+        speeds.append(math.log(max(window[end]["close"], 1e-9) / max(window[start]["close"], 1e-9)) / step)
+    if not speeds:
+        return 0, {"positiveRatio": 0.0, "variation": None}
+    positive_ratio = sum(value > 0 for value in speeds) / len(speeds)
+    average_speed = avg(speeds)
+    deviation = math.sqrt(avg([(value - average_speed) ** 2 for value in speeds]))
+    variation = deviation / max(abs(average_speed), 1e-9)
+    if average_speed <= 0:
+        points = 0
+    elif positive_ratio == 1 and variation <= 0.60:
+        points = 5
+    elif positive_ratio >= 0.75 and variation <= 1.00:
+        points = 4
+    elif positive_ratio >= 0.75:
+        points = 3
+    elif positive_ratio >= 0.50:
+        points = 2
+    else:
+        points = 1
+    return points, {"positiveRatio": positive_ratio, "variation": variation}
+
+
+def recent_high_zone_points(bars):
+    current = bars[-1]["close"]
+    history_high = max(row["high"] for row in bars)
+    distance = max(0.0, 1 - current / max(history_high, 1e-9))
+    slope5 = positive_log_slope(bars, 5)
+    slope10 = positive_log_slope(bars, 10)
+    current_atr = max(atr(bars, min(20, len(bars))), 1e-9)
+    ranges = true_ranges(bars)
+    recent_range = avg(ranges[-5:])
+    prior_range = avg(ranges[-20:-5], recent_range)
+    calm = recent_range <= prior_range * 0.90
+    recent_lows = [row["low"] for row in bars[-5:]]
+    prior_lows = [row["low"] for row in bars[-10:-5]]
+    rising_lows = len(prior_lows) >= 3 and min(recent_lows) > min(prior_lows)
+    large_bearish = any(
+        max(0.0, bars[index - 1]["close"] - bars[index]["close"]) >= current_atr * 1.5
+        or max(0.0, bars[index]["open"] - bars[index]["close"]) >= current_atr * 1.25
+        for index in range(max(1, len(bars) - 5), len(bars))
+    )
+    proximity = 2 if distance <= 0.03 else 1 if distance <= 0.08 else 0
+    direction = 1 if slope5 > 0.0005 and slope10 > 0.0005 else 0
+    low_score = 1 if rising_lows else 0
+    calm_score = 1 if calm and not large_bearish else 0
+    return proximity + direction + low_score + calm_score, {
+        "athDistance": distance,
+        "slope5": slope5,
+        "slope10": slope10,
+        "volatilityContracting": calm,
+        "risingLows": rising_lows,
+        "largeBearish": large_bearish,
+    }
+
+
+def shallow_pullback_recovery_points(bars):
+    window = bars[-min(len(bars), 20) :]
+    high_index = max(range(len(window)), key=lambda index: window[index]["high"])
+    high = window[high_index]["high"]
+    current = window[-1]["close"]
+    post = window[high_index:]
+    low = min(row["low"] for row in post)
+    drawdown = max(0.0, 1 - current / max(high, 1e-9))
+    recovery = max(0.0, current - low) / max(high - low, 1e-9)
+    ma5 = avg([row["close"] for row in bars[-5:]])
+    if drawdown <= 0.03 and current >= ma5:
+        points = 4
+    elif drawdown <= 0.06 and (recovery >= 0.50 or current >= ma5):
+        points = 3
+    elif drawdown <= 0.10 and recovery >= 0.25:
+        points = 2
+    elif drawdown <= 0.15 and current > low:
+        points = 1
+    else:
+        points = 0
+    return points, {"drawdown": drawdown, "recovery": recovery}
+
+
+def ath_ma_structure_score(bars, ma):
+    current = bars[-1]["close"]
+    history_high = max(row["high"] for row in bars)
+    distance = max(0.0, 1 - current / max(history_high, 1e-9))
+    ath_position = 4 if distance <= 0.03 else 3 if distance <= 0.05 else 2 if distance <= 0.10 else 1 if distance <= 0.20 else 0
+    short, mid, long = ma["short"][-1], ma["mid"][-1], ma["long"][-1]
+    if any(value is None for value in (short, mid, long)):
+        price_position = ordering = ma_direction = 0
+    else:
+        price_position = 2 if current > max(short, mid, long) else 1 if current > mid and current > long else 0
+        ordering = 2 if short > mid > long else 1 if short > mid or abs(mid - long) <= current * 0.012 else 0
+        lookback = min(5, len(bars) - 1)
+        previous = (ma["short"][-1 - lookback], ma["mid"][-1 - lookback], ma["long"][-1 - lookback])
+        if any(value is None for value in previous):
+            ma_direction = 0
+        else:
+            rising = [now > before for now, before in zip((short, mid, long), previous)]
+            ma_direction = 2 if all(rising) else 1 if rising[0] and rising[1] else 0
+    parts = {
+        "ATHからの位置": ath_position,
+        "株価と移動平均線の位置": price_position,
+        "移動平均線の並び": ordering,
+        "移動平均線の方向": ma_direction,
+    }
+    return sum(parts.values()), parts, {"athDistance": distance}
+
+
+def detect_recent_surge(bars, lookback=20):
+    start = max(0, len(bars) - lookback)
+    window = bars[start:]
+    current_atr = max(atr(bars, min(20, len(bars))), 1e-9)
+    running_low = window[0]["low"]
+    running_low_index = start
+    trigger = None
+    for local_index, row in enumerate(window[1:], 1):
+        global_index = start + local_index
+        if row["low"] < running_low:
+            running_low = row["low"]
+            running_low_index = global_index
+        rise_atr = max(0.0, row["high"] - running_low) / current_atr
+        rise_percent = max(0.0, row["high"] / max(running_low, 1e-9) - 1)
+        period_return = pct_change(row["close"], window[0]["close"])
+        if rise_atr >= 4.0 or rise_percent >= 0.12 or period_return >= 0.12:
+            trigger = (running_low_index, global_index)
+            break
+    if trigger is None:
+        return {"detected": False, "atr": current_atr}
+    low_index, trigger_index = trigger
+    peak_index = max(range(trigger_index, len(bars)), key=lambda index: bars[index]["high"])
+    low = bars[low_index]["low"]
+    peak = bars[peak_index]["high"]
+    return {
+        "detected": True,
+        "atr": current_atr,
+        "lowIndex": low_index,
+        "triggerIndex": trigger_index,
+        "peakIndex": peak_index,
+        "low": low,
+        "peak": peak,
+        "riseAtr": (peak - low) / current_atr,
+        "risePercent": peak / max(low, 1e-9) - 1,
+    }
+
+
+def post_surge_adjustment(bars):
+    surge = detect_recent_surge(bars)
+    if not surge["detected"]:
+        return 0, {
+            "surgeDetected": False,
+            "postSurgeState": "急騰条件なし",
+            "postSurgeAdjustment": 0,
+            "reboundConfirmationCount": 0,
+        }
+
+    peak_index = surge["peakIndex"]
+    peak = surge["peak"]
+    post_peak = bars[peak_index:]
+    current = bars[-1]["close"]
+    low_index = min(range(peak_index, len(bars)), key=lambda index: bars[index]["low"])
+    post_low = bars[low_index]["low"]
+    drawdown = max(0.0, 1 - current / max(peak, 1e-9))
+    drawdown_atr = max(0.0, peak - current) / surge["atr"]
+    bounce_fraction = max(0.0, current - post_low) / max(peak - post_low, 1e-9)
+    slope5 = positive_log_slope(bars, 5)
+    slope10 = positive_log_slope(bars, 10)
+
+    after_peak = post_peak[1:]
+    if len(after_peak) >= 3:
+        split = max(1, len(after_peak) // 2)
+        older, newer = after_peak[:split], after_peak[split:]
+        lower_highs = bool(newer) and max(row["high"] for row in newer) < max(row["high"] for row in older)
+        lower_lows = bool(newer) and min(row["low"] for row in newer) < min(row["low"] for row in older)
+    else:
+        lower_highs = lower_lows = False
+    running_low = bars[peak_index]["low"]
+    new_low_count = 0
+    for row in after_peak:
+        if row["low"] < running_low:
+            new_low_count += 1
+            running_low = row["low"]
+    decline_structure = (lower_highs and lower_lows) or new_low_count >= 2
+
+    ma5 = avg([row["close"] for row in bars[-5:]])
+    closes_after_low = [row["close"] for row in bars[low_index + 1 : -1]]
+    rebound_high_break = bool(closes_after_low) and current > max(closes_after_low)
+    average_volume = avg([row["volume"] for row in bars[-20:] if row["volume"] > 0])
+    volume_rebound = any(
+        index > 0
+        and bars[index]["close"] > bars[index]["open"]
+        and bars[index]["close"] > bars[index - 1]["close"]
+        and average_volume > 0
+        and bars[index]["volume"] >= average_volume * 1.05
+        for index in range(max(1, len(bars) - 3), len(bars))
+    )
+    confirmations = {
+        "直近5期間の傾きがプラス": slope5 > 0.0005,
+        "下落幅の50％超を回復": bounce_fraction > 0.50,
+        "直近の戻り高値を上抜く": rebound_high_break,
+        "短期移動平均線を終値で回復": current >= ma5,
+        "出来高を伴う陽線": volume_rebound,
+    }
+    confirmation_count = sum(confirmations.values())
+    periods_since_low = len(bars) - 1 - low_index
+    rebound_confirmed = confirmation_count >= 2 and periods_since_low >= 2
+    after_peak_periods = len(bars) - 1 - peak_index
+    unrecovered = bounce_fraction <= 0.50
+
+    adjustment = 0
+    state = "方向判定なし"
+    if after_peak_periods >= 2 and decline_structure and unrecovered and not rebound_confirmed:
+        if (drawdown > 0.10 or drawdown_atr > 2.5) and new_low_count >= 2:
+            adjustment, state = -5, "急騰後調整・安値更新中"
+        elif drawdown >= 0.06 and slope10 < 0:
+            adjustment, state = -4, "急騰後調整・反発未確認"
+        elif 0.03 <= drawdown < 0.06 and slope5 < 0:
+            adjustment, state = -3, "急騰後調整・反発未確認"
+        elif 0 < drawdown < 0.03 and slope5 < 0:
+            adjustment, state = -2, "急騰後小幅下落・反発未確認"
+    elif rebound_confirmed and drawdown >= 0.03:
+        state = "反発確認・減点解除"
+
+    high_zone_metrics = recent_high_zone_points(bars)[1]
+    history_high = max(row["high"] for row in bars)
+    ath_distance = max(0.0, 1 - current / max(history_high, 1e-9))
+    after_trigger_periods = len(bars) - 1 - surge["triggerIndex"]
+    gentle_up = slope5 > 0.0005 and slope10 > 0.0005
+    no_large_bearish = not high_zone_metrics["largeBearish"]
+    if adjustment == 0 and after_trigger_periods >= 2:
+        if (
+            ath_distance <= 0.03
+            and gentle_up
+            and high_zone_metrics["volatilityContracting"]
+            and high_zone_metrics["risingLows"]
+            and no_large_bearish
+        ):
+            adjustment, state = 4, "ATH近辺で低ボラ上昇継続"
+        elif ath_distance <= 0.05 and gentle_up and high_zone_metrics["risingLows"] and no_large_bearish:
+            adjustment, state = 3, "高値圏で安値切り上げ"
+        elif drawdown <= 0.07 and gentle_up and no_large_bearish and (
+            high_zone_metrics["volatilityContracting"] or high_zone_metrics["risingLows"]
+        ):
+            adjustment, state = 2, "高値圏で緩やかな上昇継続"
+
+    return adjustment, {
+        "surgeDetected": True,
+        "surgeRiseAtr": surge["riseAtr"],
+        "surgeRisePercent": surge["risePercent"],
+        "surgePeakDate": bars[peak_index]["date"],
+        "postSurgeDrawdown": drawdown,
+        "postSurgeDrawdownAtr": drawdown_atr,
+        "postSurgeState": state,
+        "postSurgeAdjustment": adjustment,
+        "reboundConfirmationCount": confirmation_count,
+        "reboundConfirmed": rebound_confirmed,
+        "reboundConfirmations": confirmations,
+        "bounceFraction": bounce_fraction,
+        "newLowCount": new_low_count,
+        "lowerHighs": lower_highs,
+        "lowerLows": lower_lows,
+    }
+
+
+def linear_high_zone_score(bars, short_period, mid_period, long_period):
+    closes = [row["close"] for row in bars]
+    ma = {
+        "short": moving_average(closes, short_period),
+        "mid": moving_average(closes, mid_period),
+        "long": moving_average(closes, long_period),
+    }
+    fit20, fit20_metrics = linear_fit_points(bars, 20, 9)
+    fit60, fit60_metrics = linear_fit_points(bars, 60, 6)
+    direction, direction_efficiency = directional_efficiency_points(bars, 20)
+    stability, stability_metrics = ascent_stability_points(bars, 20)
+    high_zone, high_zone_metrics = recent_high_zone_points(bars)
+    pullback, pullback_metrics = shallow_pullback_recovery_points(bars)
+    base_parts = {
+        "直近20期間の直線適合度": fit20,
+        "直近60期間の直線適合度": fit60,
+        "方向効率": direction,
+        "上昇速度の安定性": stability,
+        "高値圏での緩やかな上昇": high_zone,
+        "押し目の浅さ・回復力": pullback,
+    }
+    base_score = sum(base_parts.values())
+    adjustment, adjustment_metrics = post_surge_adjustment(bars)
+    final_score = max(0, min(35, base_score + adjustment))
+    details = {**base_parts, "急騰後補正": adjustment}
+    return final_score, details, ma, {
+        "linearBaseScore": base_score,
+        "linearFinalScore": final_score,
+        "fit20": fit20_metrics,
+        "fit60": fit60_metrics,
+        "directionalEfficiency": direction_efficiency,
+        "ascentStability": stability_metrics,
+        "highZone": high_zone_metrics,
+        "pullbackRecovery": pullback_metrics,
+        **adjustment_metrics,
+    }
 
 
 def score_band(score):
@@ -525,33 +884,34 @@ def stock_relative_score(stock_series, sector_series, short_period, mid_period):
 def timeframe_score(asset_bars, sector_bars, market_bars, timeframe, single_level=False):
     if timeframe == "daily":
         short_period, mid_period, long_period = 20, 50, 200
-        structure, pullback_window, breakout = 10, 60, 20
+        breakout = 20
     else:
         short_period, mid_period, long_period = 10, 20, 40
-        structure, pullback_window, breakout = 6, 26, 10
-    trend, trend_parts, ma = trend_score(asset_bars, short_period, mid_period, long_period, structure)
+        breakout = 10
+    linear, linear_parts, ma, linear_metrics = linear_high_zone_score(asset_bars, short_period, mid_period, long_period)
+    ath_ma, ath_ma_parts, ath_ma_metrics = ath_ma_structure_score(asset_bars, ma)
     volume, volume_parts, volume_proxy_missing = volume_quality(asset_bars, breakout)
     sector_rs_series = relative_series(sector_bars, market_bars)
     if single_level:
         stock_rs_series = relative_series(asset_bars, market_bars)
     else:
         stock_rs_series = relative_series(asset_bars, sector_bars)
-    pullback, pullback_parts, retracement = pullback_quality(asset_bars, ma, pullback_window)
     downside, downside_parts, downside_metrics = downside_quality(asset_bars)
     components = {
-        "トレンド構造": trend,
+        "直線上昇・高値圏上昇": linear,
         "出来高の質": volume,
-        "押し目の質": pullback,
         "下方向ボラティリティ・下落速度": downside,
+        "ATH位置・移動平均線構造": ath_ma,
     }
-    details = {**trend_parts, **volume_parts, **pullback_parts, **downside_parts}
+    details = {**linear_parts, **volume_parts, **downside_parts, **ath_ma_parts}
     return {
         "score": int(round(sum(components.values()))),
         "components": components,
         "details": details,
         "metrics": {
+            **linear_metrics,
             **downside_metrics,
-            "retracement": retracement,
+            **ath_ma_metrics,
             "volumeProxyMissing": volume_proxy_missing,
         },
         "ma": ma,

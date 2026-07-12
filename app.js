@@ -1,7 +1,7 @@
 const state = { data: null, mode: "stocks", selectedId: null, timeframe: "daily" };
 const $ = (selector) => document.querySelector(selector);
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
-const maxima = { "トレンド構造": 25, "出来高の質": 30, "押し目の質": 20, "下方向ボラティリティ・下落速度": 25 };
+const maxima = { "直線上昇・高値圏上昇": 35, "出来高の質": 30, "下方向ボラティリティ・下落速度": 25, "ATH位置・移動平均線構造": 10 };
 
 function scoreClass(score) {
   if (score >= 80) return "score-high";
@@ -142,14 +142,34 @@ function downsideDiagnostics(frame) {
   return `<div class="downside-audit"><div class="downside-audit-head"><span>5つの下方向判定</span><strong>合計 −${Number(metrics.downsidePenalty || 0)}</strong></div>${rows.map(([name, stateText, points]) => `<div class="downside-row"><span>${esc(name)}</span><b>${esc(stateText)}</b><strong>${Number(points || 0)}</strong></div>`).join("")}</div>`;
 }
 
+function postSurgeDiagnostics(frame) {
+  const metrics = frame.metrics || {};
+  if (!("postSurgeAdjustment" in metrics)) return "";
+  const adjustment = Number(metrics.postSurgeAdjustment || 0);
+  const adjustmentText = adjustment > 0 ? `+${adjustment}` : `${adjustment}`;
+  const adjustmentClass = adjustment > 0 ? "positive" : adjustment < 0 ? "negative" : "neutral";
+  const detected = Boolean(metrics.surgeDetected);
+  const rise = detected ? `${metricNumber(Number(metrics.surgeRisePercent || 0) * 100, 1)}% / ${metricNumber(metrics.surgeRiseAtr, 2)} ATR` : "該当なし";
+  const drawdown = detected ? `${metricNumber(Number(metrics.postSurgeDrawdown || 0) * 100, 1)}% / ${metricNumber(metrics.postSurgeDrawdownAtr, 2)} ATR` : "—";
+  const confirmation = detected ? `${Number(metrics.reboundConfirmationCount || 0)}/5${metrics.reboundConfirmed ? "（確認済み）" : ""}` : "—";
+  return `<div class="downside-audit surge-audit">
+    <div class="downside-audit-head"><span>35点内の急騰後補正</span><strong class="${adjustmentClass}">${adjustmentText}点</strong></div>
+    <div class="downside-row"><span>判定状態</span><b>${esc(metrics.postSurgeState || "方向判定なし")}</b><strong class="${adjustmentClass}">${adjustmentText}</strong></div>
+    <div class="downside-row"><span>直近20期間の急騰条件</span><b>${detected ? "該当" : "非該当"}</b><strong class="neutral">${esc(rise)}</strong></div>
+    <div class="downside-row"><span>急騰高値からの下落</span><b>${esc(drawdown)}</b><strong class="neutral">—</strong></div>
+    <div class="downside-row"><span>反発確認条件</span><b>${esc(confirmation)}（2つ以上・2期間以上で確認）</b><strong class="neutral">—</strong></div>
+    <div class="downside-row"><span>35点の計算</span><b>基本 ${Number(metrics.linearBaseScore || 0)} ＋ 補正 ${adjustmentText}</b><strong class="neutral">${Number(metrics.linearFinalScore || 0)}/35</strong></div>
+  </div>`;
+}
+
 function componentSection(item, timeframe) {
   const frame = item.timeframes[timeframe];
   const cards = Object.entries(frame.components).map(([name, score]) => {
     const maximum = maxima[name] || Math.max(score, 1);
     return `<div class="component"><span>${esc(name)}</span><strong>${score}<small>/${maximum}</small></strong><div class="component-bar"><b style="width:${Math.max(0, Math.min(100, score / maximum * 100))}%"></b></div></div>`;
   }).join("");
-  const details = Object.entries(frame.details).map(([name, score]) => `<tr><td>${esc(name)}</td><td>${score}</td></tr>`).join("");
-  return `<div class="component-grid">${cards}</div>${downsideDiagnostics(frame)}<details class="details-disclosure"><summary>すべての細かい配点を表示</summary><table class="fine-table"><thead><tr><th>判定項目</th><th>点数</th></tr></thead><tbody>${details}</tbody></table></details>`;
+  const details = Object.entries(frame.details).map(([name, score]) => `<tr><td>${esc(name)}</td><td>${name === "急騰後補正" && Number(score) > 0 ? "+" : ""}${score}</td></tr>`).join("");
+  return `<div class="component-grid">${cards}</div>${postSurgeDiagnostics(frame)}${downsideDiagnostics(frame)}<details class="details-disclosure"><summary>すべての細かい配点を表示</summary><table class="fine-table"><thead><tr><th>判定項目</th><th>点数</th></tr></thead><tbody>${details}</tbody></table></details>`;
 }
 
 function auditSection(item) {
