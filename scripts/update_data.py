@@ -6,15 +6,34 @@ from __future__ import annotations
 import json
 import os
 import sys
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
+from bisect import bisect_right
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from market_data import fetch_chart, fetch_profile, merge_volume, resample  # noqa: E402
+from market_data import fetch_chart_with_prehistory, fetch_profile, merge_volume, resample  # noqa: E402
 from scoring import compact_chart, moving_average, score_asset  # noqa: E402
+
+
+HISTORY_LOOKBACK_BARS = 1000
+HISTORY_DAILY_DAYS = 365
+HISTORY_TOTAL_DAYS = 365 * 3 + 14
+HISTORY_SCHEMA = [
+    "date", "finalScore", "baseScore", "afterPenalties", "dailyScore", "weeklyScore", "monthlyBonus",
+    "linearScore", "volumeScore", "downsideScore", "athMaScore", "dailyPostSurge", "weeklyPostSurge",
+    "appliedCap", "eventFlags", "er20", "atrExpansion", "close", "downsideExpansion", "breakdownPoints",
+]
+
+EVENT_DOWNSIDE_EXPANSION = 1
+EVENT_RANDOM_ENTRY = 2
+EVENT_BREAKDOWN_CAP = 4
+EVENT_BUBBLE = 8
+EVENT_POST_SURGE_BEARISH = 16
+EVENT_MONTHLY_BONUS_CHANGE = 32
+EVENT_ATH = 64
 
 
 SECTOR_MAP = {
@@ -94,7 +113,7 @@ def fetch_all(symbols):
     ordered = sorted(set(symbols))
     print(f"Charts: fetching {len(ordered)} unique symbols", flush=True)
     with ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = {executor.submit(fetch_chart, symbol): symbol for symbol in ordered}
+        futures = {executor.submit(fetch_chart_with_prehistory, symbol): symbol for symbol in ordered}
         completed = 0
         for future in as_completed(futures):
             symbol = futures[future]
@@ -133,9 +152,146 @@ def quote_fields(record, display_name=None):
     }
 
 
+def history_target_indices(bars):
+    """Daily points for one year, then each week's final trading day out to three years."""
+    if not bars:
+        return []
+    latest = date.fromisoformat(bars[-1]["date"])
+    daily_cutoff = latest - timedelta(days=HISTORY_DAILY_DAYS)
+    total_cutoff = latest - timedelta(days=HISTORY_TOTAL_DAYS)
+    daily_indices = []
+    weekly_last = {}
+    for index, bar in enumerate(bars):
+        day = date.fromisoformat(bar["date"])
+        if day < total_cutoff:
+            continue
+        if day >= daily_cutoff:
+            daily_indices.append(index)
+        else:
+            iso = day.isocalendar()
+            weekly_last[(iso.year, iso.week)] = index
+    return sorted(set(weekly_last.values()) | set(daily_indices))
+
+
+def bars_through(bars, dates, target_date, limit=HISTORY_LOOKBACK_BARS):
+    end = bisect_right(dates, target_date)
+    return bars[max(0, end - limit) : end]
+
+
+def history_state(score):
+    daily_metrics = score["timeframes"]["daily"]["metrics"]
+    random_daily = score["diagnostics"]["randomDaily"]
+    return {
+        "downside": NumberLike(daily_metrics.get("downsideExpansion")) >= 1.5,
+        "random": int(random_daily.get("count") or 0) >= 3,
+        "breakdownCap": score["caps"].get("規律崩れ上限"),
+        "bubble": int(score["diagnostics"]["bubble"].get("count") or 0) >= 3,
+        "postBearish": bool(daily_metrics.get("surgeDetected")) and bool((daily_metrics.get("highZone") or {}).get("largeBearish")),
+        "monthly": int(score["monthlyBonus"]["score"]),
+    }
+
+
+def NumberLike(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def score_history(asset_bars, sector_bars, market_bars, *, single_level=False, prehistory_high=0.0):
+    """Recalculate historical scores using only data known on each target date."""
+    targets = history_target_indices(asset_bars)
+    if not targets:
+        return []
+    sector_dates = [row["date"] for row in sector_bars]
+    market_dates = [row["date"] for row in market_bars]
+    cumulative_highs = []
+    running_high = NumberLike(prehistory_high)
+    for row in asset_bars:
+        running_high = max(running_high, row["high"])
+        cumulative_highs.append(running_high)
+
+    output = []
+    previous_state = None
+    previous_target_index = None
+    for index in targets:
+        target_date = asset_bars[index]["date"]
+        asset_slice = asset_bars[max(0, index + 1 - HISTORY_LOOKBACK_BARS) : index + 1]
+        sector_slice = bars_through(sector_bars, sector_dates, target_date)
+        market_slice = bars_through(market_bars, market_dates, target_date)
+        score = score_asset(
+            asset_slice,
+            sector_slice,
+            market_slice,
+            single_level=single_level,
+            historical_high=cumulative_highs[index],
+            include_charts=False,
+            monthly_daily=asset_bars[: index + 1],
+        )
+        if score.get("pending"):
+            continue
+        daily = score["timeframes"]["daily"]
+        weekly = score["timeframes"]["weekly"]
+        state = history_state(score)
+        flags = 0
+        if previous_state is not None:
+            if state["downside"] and not previous_state["downside"]:
+                flags |= EVENT_DOWNSIDE_EXPANSION
+            if state["random"] and not previous_state["random"]:
+                flags |= EVENT_RANDOM_ENTRY
+            if state["breakdownCap"] is not None and (
+                previous_state["breakdownCap"] is None or state["breakdownCap"] < previous_state["breakdownCap"]
+            ):
+                flags |= EVENT_BREAKDOWN_CAP
+            if state["bubble"] and not previous_state["bubble"]:
+                flags |= EVENT_BUBBLE
+            if state["postBearish"] and not previous_state["postBearish"]:
+                flags |= EVENT_POST_SURGE_BEARISH
+            if state["monthly"] != previous_state["monthly"]:
+                flags |= EVENT_MONTHLY_BONUS_CHANGE
+        if previous_target_index is not None and cumulative_highs[index] > cumulative_highs[previous_target_index]:
+            flags |= EVENT_ATH
+
+        components = []
+        for name in ("直線上昇・高値圏上昇", "出来高の質", "下方向ボラティリティ・下落速度", "ATH位置・移動平均線構造"):
+            components.append(round((daily["components"][name] + weekly["components"][name]) / 2, 1))
+        random_daily = score["diagnostics"]["randomDaily"]
+        row = [
+            target_date,
+            score["score"],
+            score["baseScore"],
+            score["afterPenalties"],
+            daily["score"],
+            weekly["score"],
+            score["monthlyBonus"]["score"],
+            *components,
+            int(daily["metrics"].get("postSurgeAdjustment") or 0),
+            int(weekly["metrics"].get("postSurgeAdjustment") or 0),
+            None if score["appliedCap"] == 110 else score["appliedCap"],
+            flags,
+            round(NumberLike(random_daily.get("er20")), 4),
+            round(NumberLike(random_daily.get("atrExpansion")), 4),
+            round(asset_bars[index]["close"], 4),
+            round(NumberLike(daily["metrics"].get("downsideExpansion")), 4),
+            score["penalties"]["breakdown"]["breakdownPoints"],
+        ]
+        output.append(row)
+        previous_state = state
+        previous_target_index = index
+    return output
+
+
 def build_scored_item(identifier, symbol, category, record, sector_record, market_record, *, name=None, sector_name=None, hide_symbol=False, volume_record=None, single_level=False):
     bars = merge_volume(record["bars"], volume_record["bars"] if volume_record else None)
-    score = score_asset(bars, sector_record["bars"], market_record["bars"], single_level=single_level)
+    prehistory_high = NumberLike(record.get("historicalHighBeforeRange"))
+    historical_high = max(prehistory_high, max(row["high"] for row in bars))
+    score = score_asset(
+        bars,
+        sector_record["bars"],
+        market_record["bars"],
+        single_level=single_level,
+        historical_high=historical_high,
+    )
     item = {
         "id": identifier,
         "symbol": symbol,
@@ -147,6 +303,14 @@ def build_scored_item(identifier, symbol, category, record, sector_record, marke
     }
     if score.get("pending"):
         item["charts"] = pending_chart(bars)
+    else:
+        item["scoreHistory"] = score_history(
+            bars,
+            sector_record["bars"],
+            market_record["bars"],
+            single_level=single_level,
+            prehistory_high=prehistory_high,
+        )
     return item
 
 
@@ -172,31 +336,47 @@ def main():
     symbols.discard(None)
     records, failures = fetch_all(symbols)
 
-    results = []
-    unavailable = []
+    stock_items = [None] * len(stocks)
     spy = records.get("SPY")
     if not spy:
         raise RuntimeError(f"SPY benchmark could not be fetched: {failures.get('SPY', 'unknown error')}")
 
-    for symbol in stocks:
-        profile = sector_cache.get(symbol, {})
-        proxy, sector_name = stock_sectors[symbol]
-        record = records.get(symbol)
-        sector_record = records.get(proxy) or spy
-        if not record:
-            unavailable.append({
-                "id": f"stock-{symbol}", "symbol": symbol, "displaySymbol": symbol, "name": profile.get("name") or symbol,
-                "category": "stock", "sectorName": sector_name, "pending": True,
-                "reason": f"価格履歴を取得できませんでした。母集団には含まれています。{failures.get(symbol, '')}".strip(),
-            })
-            continue
-        results.append(build_scored_item(
-            f"stock-{symbol}", symbol, "stock", record, sector_record, spy,
-            name=profile.get("name") or None, sector_name=sector_name,
-        ))
+    score_workers = max(1, int(os.getenv("SCORE_WORKERS", str(min(4, os.cpu_count() or 2)))))
+    print(f"Score history: using {score_workers} worker processes", flush=True)
+    completed_stocks = 0
+    with ProcessPoolExecutor(max_workers=score_workers) as executor:
+        futures = {}
+        for stock_index, symbol in enumerate(stocks):
+            profile = sector_cache.get(symbol, {})
+            proxy, sector_name = stock_sectors[symbol]
+            record = records.get(symbol)
+            sector_record = records.get(proxy) or spy
+            if not record:
+                stock_items[stock_index] = {
+                    "id": f"stock-{symbol}", "symbol": symbol, "displaySymbol": symbol, "name": profile.get("name") or symbol,
+                    "category": "stock", "sectorName": sector_name, "pending": True,
+                    "reason": f"価格履歴を取得できませんでした。母集団には含まれています。{failures.get(symbol, '')}".strip(),
+                }
+                completed_stocks += 1
+                continue
+            future = executor.submit(
+                build_scored_item,
+                f"stock-{symbol}", symbol, "stock", record, sector_record, spy,
+                name=profile.get("name") or None,
+                sector_name=sector_name,
+            )
+            futures[future] = stock_index
+        for future in as_completed(futures):
+            stock_items[futures[future]] = future.result()
+            completed_stocks += 1
+            if completed_stocks % 5 == 0 or completed_stocks == len(stocks):
+                print(f"Score history: stocks {completed_stocks}/{len(stocks)}", flush=True)
+
+    if any(item is None for item in stock_items):
+        raise RuntimeError("One or more stock score tasks did not return a result.")
 
     index_items = []
-    for config in universe["indices"]:
+    for index_number, config in enumerate(universe["indices"], 1):
         record = records.get(config["symbol"])
         benchmark = records.get(config.get("benchmark")) or spy
         if not record:
@@ -207,9 +387,10 @@ def main():
             config["id"], config["symbol"], "index", record, record, benchmark,
             name=config["name"], volume_record=volume_record, single_level=True,
         ))
+        print(f"Score history: indices {index_number}/{len(universe['indices'])}", flush=True)
 
     sector_items = []
-    for config in universe["sectors"]:
+    for sector_number, config in enumerate(universe["sectors"], 1):
         record = records.get(config["symbol"])
         if not record:
             sector_items.append({"id": config["id"], "symbol": config["symbol"], "displaySymbol": "", "name": config["name"], "category": "sector", "pending": True, "reason": failures.get(config["symbol"], "価格履歴を取得できませんでした。")})
@@ -219,14 +400,25 @@ def main():
             config["id"], config["symbol"], "sector", record, record, spy,
             name=config["name"], hide_symbol=True, volume_record=volume_record, single_level=True,
         ))
+        if sector_number % 5 == 0 or sector_number == len(universe["sectors"]):
+            print(f"Score history: sectors {sector_number}/{len(universe['sectors'])}", flush=True)
 
-    stock_items = results + unavailable
     ranked = sorted((item for item in stock_items if not item.get("pending")), key=lambda item: item["score"], reverse=True)
     top20 = [item["id"] for item in ranked[:20]]
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "methodologyVersion": "us-equity-discipline-v4-post-surge",
+        "methodologyVersion": "us-equity-discipline-v5-score-history",
         "dataSource": "Yahoo Finance chart API（最新完成日足）",
+        "historySchema": HISTORY_SCHEMA,
+        "historyEvents": {
+            "downsideExpansion": EVENT_DOWNSIDE_EXPANSION,
+            "randomEntry": EVENT_RANDOM_ENTRY,
+            "breakdownCap": EVENT_BREAKDOWN_CAP,
+            "bubble": EVENT_BUBBLE,
+            "postSurgeBearish": EVENT_POST_SURGE_BEARISH,
+            "monthlyBonusChange": EVENT_MONTHLY_BONUS_CHANGE,
+            "ath": EVENT_ATH,
+        },
         "counts": {
             "requestedStocks": len(stocks),
             "availableStocks": sum(1 for item in stock_items if not item.get("pending")),

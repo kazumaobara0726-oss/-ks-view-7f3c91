@@ -44,7 +44,7 @@ def _get_json(urls: list[str], attempts: int = 5) -> dict:
     raise RuntimeError(str(last_error or "market data request failed"))
 
 
-def fetch_chart(symbol: str, chart_range: str = "5y") -> dict:
+def fetch_chart(symbol: str, chart_range: str = "10y") -> dict:
     source_symbol = yahoo_symbol(symbol)
     encoded = urllib.parse.quote(source_symbol, safe="")
     query = urllib.parse.urlencode(
@@ -108,6 +108,32 @@ def fetch_chart(symbol: str, chart_range: str = "5y") -> dict:
         raise RuntimeError("no usable bars")
     meta = result.get("meta") or {}
     return {"requestedSymbol": symbol, "sourceSymbol": source_symbol, "meta": meta, "bars": bars}
+
+
+def fetch_chart_with_prehistory(symbol: str) -> dict:
+    """Return ten years of daily bars plus an older ATH baseline.
+
+    Yahoo automatically makes ``range=max`` data sparse for long-lived symbols,
+    even when ``interval=1d`` is requested.  Those sparse bars must never be fed
+    into moving-average calculations.  We therefore score with exact 10-year
+    daily bars and use max-range bars only to preserve the all-time high that
+    existed before the daily window began.
+    """
+    record = fetch_chart(symbol, "10y")
+    cutoff = record["bars"][0]["date"]
+    prehistory_high = 0.0
+    try:
+        maximum = fetch_chart(symbol, "max")
+        prehistory_high = max(
+            (bar["high"] for bar in maximum["bars"] if bar["date"] < cutoff),
+            default=0.0,
+        )
+    except RuntimeError:
+        # Ten years of exact daily data is sufficient for every score formula.
+        # A temporary max-range failure should not make the whole item pending.
+        prehistory_high = 0.0
+    record["historicalHighBeforeRange"] = float(prehistory_high)
+    return record
 
 
 def fetch_profile(symbol: str) -> dict:

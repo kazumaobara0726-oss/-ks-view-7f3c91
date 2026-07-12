@@ -21,7 +21,7 @@ jobs:
   update-data:
     if: github.event_name != 'push' || github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,6 +46,13 @@ jobs:
           assert len(data['top20']) <= 20
           assert len(data['indices']) == 7
           assert len(data['sectors']) == 15
+          assert data['methodologyVersion'] == 'us-equity-discipline-v5-score-history'
+          assert len(data['historySchema']) == 20
+          scored = [item for item in data['stocks'] if not item.get('pending')]
+          assert all(item.get('scoreHistory') for item in scored)
+          assert all(len(item['scoreHistory'][-1]) == len(data['historySchema']) for item in scored)
+          assert all(item['scoreHistory'][-1][0] == item['asOf'] for item in scored)
+          assert all(item['scoreHistory'][-1][1] == item['score'] for item in scored)
           print(data['counts'])
           PY
       - name: Commit refreshed data

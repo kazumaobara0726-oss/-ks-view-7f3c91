@@ -17,9 +17,21 @@ def avg(values, default=0.0):
 
 def moving_average(values, period):
     result = []
-    for index in range(len(values)):
-        start = index - period + 1
-        result.append(avg(values[start : index + 1]) if start >= 0 else None)
+    window_sum = 0.0
+    valid_count = 0
+    normalized = []
+    for index, value in enumerate(values):
+        number = float(value) if value is not None and math.isfinite(float(value)) else None
+        normalized.append(number)
+        if number is not None:
+            window_sum += number
+            valid_count += 1
+        if index >= period:
+            expired = normalized[index - period]
+            if expired is not None:
+                window_sum -= expired
+                valid_count -= 1
+        result.append(window_sum / valid_count if index >= period - 1 and valid_count else (0.0 if index >= period - 1 else None))
     return result
 
 
@@ -136,9 +148,9 @@ def ascent_stability_points(bars, periods=20):
     return points, {"positiveRatio": positive_ratio, "variation": variation}
 
 
-def recent_high_zone_points(bars):
+def recent_high_zone_points(bars, historical_high=None):
     current = bars[-1]["close"]
-    history_high = max(row["high"] for row in bars)
+    history_high = historical_high or max(row["high"] for row in bars)
     distance = max(0.0, 1 - current / max(history_high, 1e-9))
     slope5 = positive_log_slope(bars, 5)
     slope10 = positive_log_slope(bars, 10)
@@ -192,9 +204,9 @@ def shallow_pullback_recovery_points(bars):
     return points, {"drawdown": drawdown, "recovery": recovery}
 
 
-def ath_ma_structure_score(bars, ma):
+def ath_ma_structure_score(bars, ma, historical_high=None):
     current = bars[-1]["close"]
-    history_high = max(row["high"] for row in bars)
+    history_high = historical_high or max(row["high"] for row in bars)
     distance = max(0.0, 1 - current / max(history_high, 1e-9))
     ath_position = 4 if distance <= 0.03 else 3 if distance <= 0.05 else 2 if distance <= 0.10 else 1 if distance <= 0.20 else 0
     short, mid, long = ma["short"][-1], ma["mid"][-1], ma["long"][-1]
@@ -256,7 +268,7 @@ def detect_recent_surge(bars, lookback=20):
     }
 
 
-def post_surge_adjustment(bars):
+def post_surge_adjustment(bars, historical_high=None):
     surge = detect_recent_surge(bars)
     if not surge["detected"]:
         return 0, {
@@ -333,8 +345,8 @@ def post_surge_adjustment(bars):
     elif rebound_confirmed and drawdown >= 0.03:
         state = "反発確認・減点解除"
 
-    high_zone_metrics = recent_high_zone_points(bars)[1]
-    history_high = max(row["high"] for row in bars)
+    high_zone_metrics = recent_high_zone_points(bars, historical_high)[1]
+    history_high = historical_high or max(row["high"] for row in bars)
     ath_distance = max(0.0, 1 - current / max(history_high, 1e-9))
     after_trigger_periods = len(bars) - 1 - surge["triggerIndex"]
     gentle_up = slope5 > 0.0005 and slope10 > 0.0005
@@ -374,7 +386,7 @@ def post_surge_adjustment(bars):
     }
 
 
-def linear_high_zone_score(bars, short_period, mid_period, long_period):
+def linear_high_zone_score(bars, short_period, mid_period, long_period, historical_high=None):
     closes = [row["close"] for row in bars]
     ma = {
         "short": moving_average(closes, short_period),
@@ -385,7 +397,7 @@ def linear_high_zone_score(bars, short_period, mid_period, long_period):
     fit60, fit60_metrics = linear_fit_points(bars, 60, 6)
     direction, direction_efficiency = directional_efficiency_points(bars, 20)
     stability, stability_metrics = ascent_stability_points(bars, 20)
-    high_zone, high_zone_metrics = recent_high_zone_points(bars)
+    high_zone, high_zone_metrics = recent_high_zone_points(bars, historical_high)
     pullback, pullback_metrics = shallow_pullback_recovery_points(bars)
     base_parts = {
         "直近20期間の直線適合度": fit20,
@@ -396,7 +408,7 @@ def linear_high_zone_score(bars, short_period, mid_period, long_period):
         "押し目の浅さ・回復力": pullback,
     }
     base_score = sum(base_parts.values())
-    adjustment, adjustment_metrics = post_surge_adjustment(bars)
+    adjustment, adjustment_metrics = post_surge_adjustment(bars, historical_high)
     final_score = max(0, min(35, base_score + adjustment))
     details = {**base_parts, "急騰後補正": adjustment}
     return final_score, details, ma, {
@@ -881,15 +893,15 @@ def stock_relative_score(stock_series, sector_series, short_period, mid_period):
     return excess + direction + leadership, {"セクターに対する超過リターン": excess, "個別株RSラインの方向": direction, "セクターに対する先行性": leadership}, (short, mid)
 
 
-def timeframe_score(asset_bars, sector_bars, market_bars, timeframe, single_level=False):
+def timeframe_score(asset_bars, sector_bars, market_bars, timeframe, single_level=False, historical_high=None):
     if timeframe == "daily":
         short_period, mid_period, long_period = 20, 50, 200
         breakout = 20
     else:
         short_period, mid_period, long_period = 10, 20, 40
         breakout = 10
-    linear, linear_parts, ma, linear_metrics = linear_high_zone_score(asset_bars, short_period, mid_period, long_period)
-    ath_ma, ath_ma_parts, ath_ma_metrics = ath_ma_structure_score(asset_bars, ma)
+    linear, linear_parts, ma, linear_metrics = linear_high_zone_score(asset_bars, short_period, mid_period, long_period, historical_high)
+    ath_ma, ath_ma_parts, ath_ma_metrics = ath_ma_structure_score(asset_bars, ma, historical_high)
     volume, volume_parts, volume_proxy_missing = volume_quality(asset_bars, breakout)
     sector_rs_series = relative_series(sector_bars, market_bars)
     if single_level:
@@ -1319,15 +1331,24 @@ def compact_chart(bars, ma, limit):
     return output
 
 
-def score_asset(daily, sector_daily, market_daily, single_level=False):
+def score_asset(
+    daily,
+    sector_daily,
+    market_daily,
+    single_level=False,
+    historical_high=None,
+    include_charts=True,
+    monthly_daily=None,
+):
     weekly = resample(daily, "week")
-    monthly = resample(daily, "month")
+    monthly = resample(monthly_daily if monthly_daily is not None else daily, "month")
     sector_weekly = resample(sector_daily, "week")
     market_weekly = resample(market_daily, "week")
     if len(daily) < 200 or len(weekly) < 40:
         return {"pending": True, "reason": f"採点に必要な履歴が不足しています（日足{len(daily)}本・週足{len(weekly)}本）。", "dailyBars": len(daily), "weeklyBars": len(weekly)}
-    day = timeframe_score(daily, sector_daily, market_daily, "daily", single_level=single_level)
-    week = timeframe_score(weekly, sector_weekly, market_weekly, "weekly", single_level=single_level)
+    historical_high = historical_high or max(row["high"] for row in daily)
+    day = timeframe_score(daily, sector_daily, market_daily, "daily", single_level=single_level, historical_high=historical_high)
+    week = timeframe_score(weekly, sector_weekly, market_weekly, "weekly", single_level=single_level, historical_high=historical_high)
     month_bonus, month_parts, month_cap = monthly_bonus(monthly, day["score"], week["score"], weekly)
     three_penalty, three_change = three_year_penalty(daily)
     long_cap, long_checks = long_decline_cap(daily, weekly, three_change)
@@ -1368,8 +1389,8 @@ def score_asset(daily, sector_daily, market_daily, single_level=False):
         "afterPenalties": round(after_penalties, 1),
         "appliedCap": applied_cap,
         "timeframes": {
-            "daily": {"score": day["score"], "components": day["components"], "details": day["details"], "metrics": day["metrics"], "chart": compact_chart(daily, day["ma"], 90)},
-            "weekly": {"score": week["score"], "components": week["components"], "details": week["details"], "metrics": week["metrics"], "chart": compact_chart(weekly, week["ma"], 70)},
+            "daily": {"score": day["score"], "components": day["components"], "details": day["details"], "metrics": day["metrics"], **({"chart": compact_chart(daily, day["ma"], 90)} if include_charts else {})},
+            "weekly": {"score": week["score"], "components": week["components"], "details": week["details"], "metrics": week["metrics"], **({"chart": compact_chart(weekly, week["ma"], 70)} if include_charts else {})},
         },
         "monthlyBonus": {"score": month_bonus, "rawParts": month_parts, "cap": month_cap},
         "penalties": {

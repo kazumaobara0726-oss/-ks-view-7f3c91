@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#090b0f">
+  <meta name="theme-color" content="#ffffff">
   <meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
   <meta name="googlebot" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
   <meta name="bingbot" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
   <meta name="referrer" content="no-referrer">
   <title>US Equity Discipline | 米国株 規律性スコア</title>
-  <link rel="stylesheet" href="./styles.css?v=4">
+  <link rel="stylesheet" href="./styles.css?v=5">
 </head>
 <body>
   <header class="site-header">
@@ -48,7 +48,7 @@
       <div><span>データ基準</span><strong>最新完成足</strong></div>
     </section>
 
-    <p class="notice"><strong>DISCIPLINE MODEL V4</strong> 日足・週足を4領域100点で採点し、直線上昇35点の中で急騰後の値動きを−5〜＋4点補正します。月足構造と状態別の減点・上限も反映します。分析・学習補助用の計算モデルであり、売買推奨ではありません。</p>
+    <p class="notice"><strong>DISCIPLINE MODEL V5</strong> 最新スコアに加え、未来データを使わず再計算した規律可能性の推移を表示します。6か月を標準に1か月〜3年を切り替えられます。分析・学習補助用の計算モデルであり、売買推奨ではありません。</p>
 
     <div class="workspace">
       <section class="list-panel panel">
@@ -71,7 +71,7 @@
   <dialog id="method-dialog" class="method-dialog">
     <form method="dialog" class="dialog-card">
       <div class="dialog-head">
-        <div><p class="eyebrow">DISCIPLINE MODEL V4</p><h2>採点方法</h2></div>
+        <div><p class="eyebrow">DISCIPLINE MODEL V5</p><h2>採点・推移表示</h2></div>
         <button class="dialog-close" value="close" aria-label="閉じる">×</button>
       </div>
       <div class="method-grid">
@@ -83,8 +83,12 @@
         <section><h3>急騰の定義と補正</h3><p>直近20期間で、安値から高値まで4ATR以上、または上昇率12％以上なら急騰後を判定します。下落継続・反発未確認は−2〜−5、高値圏の緩やかな上昇は＋2〜＋4、方向不明は0です。</p></section>
         <section><h3>反発確認・二重減点防止</h3><p>5期間傾き、下落幅の50％超回復、戻り高値上抜け、短期線回復、出来高を伴う陽線のうち2つ以上を、2期間以上の値動きで確認します。急騰後減点は最大−5点で、単独の大陰線だけでは大きく重ねて減点しません。</p></section>
         <section><h3>状態別の減点・上限</h3><p>月足ボーナス、規律崩れ、短期ランダム、バブル的急騰・崩壊、3年下落条件を別判定します。各画面では計算根拠を監査でき、結果は売買の指示ではありません。</p></section>
+        <section><h3>スコア推移</h3><p>縦軸は常に0〜110点。実線は最終スコア、破線は減点・上限適用前です。背景の点数帯と状態変化マーカーで、規律の高さ・方向・急変・上限発動を確認できます。</p></section>
+        <section><h3>期間とデータ密度</h3><p>標準は6か月。1か月・3か月・6か月・1年は毎営業日、3年は各週の最終営業日を表示します。一覧には直近60営業日のミニ折れ線を表示します。</p></section>
+        <section><h3>過去時点の再計算</h3><p>各日のスコアは、その日までに判明していた価格・出来高・移動平均線・ATH・反発だけで計算します。未来の値動きは参照しません。</p></section>
+        <section><h3>詳細は折りたたみ</h3><p>最初は主要4領域のみを表示します。細かい配点、急騰後補正、下方向判定、減点・上限の監査は、必要なときだけ開いて確認できます。</p></section>
       </div>
-      <p class="method-note">各銘柄の詳細画面で、日足・週足の4領域、細かい配点、月足ボーナス、減点、規律崩れ点、適用上限を確認できます。</p>
+      <p class="method-note">グラフ上の日付に触れると、その日の配点・上限・状態変化の理由を表示します。PCではマウス、スマホではタップで操作できます。</p>
     </form>
   </dialog>
 
@@ -92,6 +96,6 @@
     <span>データ: Yahoo Financeの完成日足</span>
     <span>検索除外: noindex / robots.txt</span>
   </footer>
-  <script src="./app.js?v=4" defer></script>
+  <script src="./app.js?v=5" defer></script>
 </body>
 </html>

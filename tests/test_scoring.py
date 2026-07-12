@@ -2,6 +2,7 @@ import json
 import math
 import sys
 import unittest
+from copy import deepcopy
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from scoring import (  # noqa: E402
     random_market,
     score_asset,
 )
+from update_data import HISTORY_SCHEMA, score_history  # noqa: E402
 
 
 def synthetic_daily(count=1100, *, growth=0.0007, volatility=0.012, volume=1_000_000):
@@ -82,6 +84,14 @@ class UniverseTests(unittest.TestCase):
 
 
 class ScoringTests(unittest.TestCase):
+    def test_rolling_moving_average_matches_the_original_definition(self):
+        from scoring import moving_average
+
+        values = [float(index) for index in range(1, 31)]
+        result = moving_average(values, 5)
+        expected = [None] * 4 + [sum(values[index - 4 : index + 1]) / 5 for index in range(4, len(values))]
+        self.assertEqual(result, expected)
+
     def test_monthly_bonus_handles_early_twenty_month_history(self):
         daily = synthetic_daily(460)
         monthly = resample(daily, "month")
@@ -228,6 +238,43 @@ class ScoringTests(unittest.TestCase):
         adjustment, metrics = post_surge_adjustment(bars_from_closes(closes))
         self.assertEqual(adjustment, 0)
         self.assertEqual(metrics["postSurgeState"], "方向判定なし")
+
+    def test_score_history_latest_point_matches_the_current_score(self):
+        asset = synthetic_daily(1100, growth=0.0009)
+        sector = synthetic_daily(1100, growth=0.0006)
+        market = synthetic_daily(1100, growth=0.0004)
+        prehistory_high = max(row["high"] for row in asset) * 1.1
+        history = score_history(asset, sector, market, prehistory_high=prehistory_high)
+        current = score_asset(
+            asset,
+            sector,
+            market,
+            historical_high=prehistory_high,
+            include_charts=False,
+        )
+        self.assertTrue(history)
+        self.assertEqual(len(history[-1]), len(HISTORY_SCHEMA))
+        self.assertEqual(history[-1][0], asset[-1]["date"])
+        self.assertEqual(history[-1][1], current["score"])
+        self.assertEqual(history[-1][2], current["baseScore"])
+
+    def test_score_history_never_uses_future_bars(self):
+        asset = synthetic_daily(430, growth=0.0008)
+        sector = synthetic_daily(430, growth=0.0005)
+        market = synthetic_daily(430, growth=0.0003)
+        changed_future = deepcopy(asset)
+        cutoff = asset[-31]["date"]
+        for row in changed_future[-30:]:
+            row["open"] *= 1.8
+            row["high"] *= 1.8
+            row["low"] *= 1.8
+            row["close"] *= 1.8
+            row["adj"] *= 1.8
+            row["volume"] *= 5
+        original_by_date = {row[0]: row for row in score_history(asset, sector, market)}
+        changed_by_date = {row[0]: row for row in score_history(changed_future, sector, market)}
+        self.assertIn(cutoff, original_by_date)
+        self.assertEqual(original_by_date[cutoff], changed_by_date[cutoff])
 
 
 if __name__ == "__main__":
