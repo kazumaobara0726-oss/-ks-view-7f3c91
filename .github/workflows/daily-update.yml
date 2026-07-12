@@ -6,6 +6,11 @@ on:
     paths-ignore:
       - data.json
       - sector_cache.json
+      - app.js
+      - index.html
+      - styles.css
+      - README.md
+      - robots.txt
   schedule:
     - cron: "35 23 * * *"
   workflow_dispatch:
@@ -19,7 +24,9 @@ concurrency:
 
 jobs:
   update-data:
-    if: github.event_name != 'push' || github.actor != 'github-actions[bot]'
+    if: >-
+      (github.event_name != 'push' || github.actor != 'github-actions[bot]') &&
+      (github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip data]'))
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
